@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hilfe - Pädagogische Dokumentation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: #f9f9f9;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+        code {
+            background-color: #e0e0e0;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: "Courier New", Courier, monospace;
+        }
+        .container {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        li {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hilfe zur Anwendung</h1>
+        <p>Willkommen bei der Hilfe für Ihre Anwendung zur pädagogischen Dokumentation. Hier finden Sie eine Erklärung aller wichtigen Funktionen.</p>
+
+        <h2>1. Aufbau der Anwendung</h2>
+        <p>Die Anwendung ist in mehrere Bereiche aufgeteilt:</p>
+        <ul>
+            <li><strong>Kopfzeile:</strong> Ganz oben finden Sie den Titel der Anwendung.</li>
+            <li><strong>Werkzeugleiste:</strong> Unter der Kopfzeile befindet sich die Leiste mit den Hauptaktionen (z.B. Kind anlegen, Suchen, Exportieren).</li>
+            <li><strong>Navigation (links):</strong> Hier können Sie die Anzeige filtern und zwischen Kindern und Tagen wechseln.</li>
+            <li><strong>Hauptbereich (rechts):</strong> Hier werden die Protokolleinträge für das ausgewählte Kind oder den ausgewählten Tag angezeigt.</li>
+        </ul>
+
+        <h2>2. Kinder verwalten</h2>
+        <h3>Kind anlegen</h3>
+        <p>Klicken Sie in der Werkzeugleiste auf <code>➕ Kind anlegen</code>. Es öffnet sich ein Formular, in das Sie alle notwendigen Informationen eintragen können.</p>
+        
+        <h3>Kind suchen</h3>
+        <p>Nutzen Sie das Suchfeld in der Werkzeugleiste. Beginnen Sie, den Namen eines Kindes einzutippen, und die Liste in der Navigation wird in Echtzeit gefiltert.</p>
+        
+        <h2>3. Einträge verwalten</h2>
+        <h3>Neuen Eintrag erstellen</h3>
+        <p>Wählen Sie zuerst ein Kind aus der Navigationsliste aus. Im Hauptbereich erscheint dann über der Eintragsliste der Button <code>✨ Neuer Eintrag</code>. Ein Klick darauf öffnet das Formular zum Erstellen eines neuen Protokolleintrags für dieses Kind.</p>
+
+        <h3>Eintrag ändern oder löschen</h3>
+        <p>Klicken Sie auf einen beliebigen Eintrag in der Liste im Hauptbereich, um ihn auszuwählen (er wird mit einem farbigen Rahmen markiert). Sobald ein Eintrag ausgewählt ist, werden die Buttons <code>✏️ Eintrag ändern</code> und <code>🗑️ Eintrag löschen</code> in der Werkzeugleiste aktiv.</p>
+
+        <h2>4. Filtern und Ansichten</h2>
+        <p>Die Navigation auf der linken Seite bietet Ihnen mächtige Filterfunktionen:</p>
+        <ul>
+            <li><strong>Schuljahr, Schule, Klasse, Kind:</strong> Diese Dropdown-Menüs filtern die angezeigte Kinderliste. Sie können die Filter kombinieren, um z.B. nur Kinder einer bestimmten Klasse in einem bestimmten Schuljahr zu sehen.</li>
+            <li><strong>Tag:</strong> Wenn Sie hier ein Datum auswählen, wechselt die Anwendung in die "Tagesansicht". Im Hauptbereich sehen Sie dann alle Einträge aller Kinder für den ausgewählten Tag. Um zurück zur Kind-Ansicht zu gelangen, wählen Sie einfach wieder ein Kind aus der Liste aus.</li>
+        </ul>
+
+        <h2>5. Datenmanagement (Import & Export)</h2>
+        <p>In der Werkzeugleiste finden Sie Buttons zum Sichern und Wiederherstellen Ihrer Daten.</p>
+        <ul>
+            <li><strong>📤 Export:</strong> Erstellt eine vollständige Sicherung aller Kinder und Einträge in einer <code>.json</code>-Datei und speichert sie auf Ihrem Computer. Führen Sie dies regelmäßig durch, um Datenverlust zu vermeiden.</li>
+            <li><strong>📥 Import:</strong> Lädt eine zuvor exportierte <code>.json</code>-Datei. <strong>Achtung:</strong> Beim Import werden alle aktuell in der Anwendung gespeicherten Daten unwiderruflich überschrieben!</li>
+        </ul>
+
+        <h2>6. Einstellungen</h2>
+        <p>Über den Button <code>⚙️ Einstellungen</code> in der Navigation können Sie das Erscheinungsbild der Anwendung anpassen:</p>
+        <ul>
+            <li><strong>Farbschema:</strong> Wählen Sie zwischen einem hellen, einem dunklen und einem kontrastreichen Design.</li>
+            <li><strong>Schriftgröße:</strong> Passen Sie die Schriftgröße mit dem Schieberegler an Ihre Lesegewohnheiten an.</li>
+        </ul>
+        <p>Ihre Einstellungen werden automatisch im Browser gespeichert.</p>
+
+    </div>
+</body>
+</html>
