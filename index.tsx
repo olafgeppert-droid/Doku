@@ -22,29 +22,45 @@ import {
     addEntryToDB,
     updateEntryInDB,
     deleteEntryFromDB,
-    getEntriesForStudentFromDB,
-    getEntriesForDateFromDB,
     getAllEntriesFromDB,
+    updateStudentInDB,
+    deleteStudentFromDB,
 } from './database';
 
 // --- DEFAULT SETTINGS ---
 const DEFAULT_SETTINGS: Settings = {
     theme: 'default',
     fontSize: 16,
+    inputFontSize: 16,
     customColors: {
         sidebar: '#e9ecef',
         header: '#343a40',
         toolbar: '#f8f9fa',
         entryBackground: '#ffffff',
+    },
+    masterData: {
+        schoolYears: ['2023/2024', '2024/2025', '2025/2026'],
+        schools: {
+            'Grundschule am Park': ['1a', '1b', '2a', '2b', '3a', '3b', '4a', '4b'],
+            'Goethe-Gesamtschule': ['5c', '6a', '7b', '8d', '9a', '10c'],
+        }
     }
+};
+
+type HistoryState = {
+    students: Student[];
+    allEntries: Entry[];
 };
 
 const App = () => {
     // Data state
     const [students, setStudents] = useState<Student[]>([]);
-    const [studentEntries, setStudentEntries] = useState<Entry[]>([]);
-    const [dayEntries, setDayEntries] = useState<Entry[]>([]);
+    const [allEntries, setAllEntries] = useState<Entry[]>([]);
     const [version, setVersion] = useState('');
+
+    // History state
+    const [history, setHistory] = useState<HistoryState[]>([]);
+    const [historyIndex, setHistoryIndex] = useState(-1);
 
     // Selection state
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -52,6 +68,7 @@ const App = () => {
 
     // UI state
     const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
+    const [studentToEdit, setStudentToEdit] = useState<Student | null>(null);
     const [isEntryModalOpen, setIsEntryModalOpen] = useState(false);
     const [entryToEdit, setEntryToEdit] = useState<Entry | null>(null);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -67,9 +84,15 @@ const App = () => {
     
     // --- DATABASE & DATA LOADING ---
     useEffect(() => {
-        initDB().then(() => {
-            loadStudents();
+        initDB().then(async () => {
             loadSettings();
+            const initialStudents = await getStudentsFromDB();
+            const initialEntries = await getAllEntriesFromDB();
+            
+            // Set initial history state, which will trigger the useEffect to set component state
+            setHistory([{ students: initialStudents, allEntries: initialEntries }]);
+            setHistoryIndex(0);
+
         }).catch(err => console.error("DB initialization failed:", err));
         
         fetch('./metadata.json')
@@ -78,77 +101,68 @@ const App = () => {
             .catch(err => console.error("Failed to load version:", err));
 
     }, []);
-
-    const loadStudents = async () => {
-        try {
-            const allStudents = await getStudentsFromDB();
-            setStudents(allStudents.sort((a,b) => a.name.localeCompare(b.name)));
-        } catch (error) {
-            console.error("Failed to load students:", error);
-        }
-    };
     
     // --- EFFECTS ---
     // Apply settings
     useEffect(() => {
         const root = document.documentElement;
         root.style.setProperty('--font-size', `${settings.fontSize}px`);
+        root.style.setProperty('--input-font-size', `${settings.inputFontSize ?? 16}px`);
         
         const applyThemeColors = (themeSettings: Partial<Settings['customColors']>) => {
-            root.style.setProperty('--sidebar-bg', themeSettings.sidebar || '');
-            root.style.setProperty('--header-bg', themeSettings.header || '');
-            root.style.setProperty('--toolbar-bg', themeSettings.toolbar || '');
-            root.style.setProperty('--card-bg', themeSettings.entryBackground || '');
-            root.style.setProperty('--border-color', settings.theme === 'dark' || settings.theme === 'high-contrast' ? '#6c757d' : '#dee2e6');
+            root.style.setProperty('--sidebar-bg', themeSettings.sidebar || null);
+            root.style.setProperty('--header-bg', themeSettings.header || null);
+            root.style.setProperty('--toolbar-bg', themeSettings.toolbar || null);
+            root.style.setProperty('--card-bg', themeSettings.entryBackground || null);
+            root.style.setProperty('--border-color', settings.theme === 'dark' || settings.theme === 'high-contrast' ? '#6c757d' : null);
         };
         
+        const resetButtonColors = () => {
+            root.style.removeProperty('--primary-color');
+            root.style.removeProperty('--secondary-color');
+            root.style.removeProperty('--danger-color');
+            root.style.removeProperty('--btn-primary-text');
+            root.style.removeProperty('--btn-secondary-text');
+            root.style.removeProperty('--btn-danger-text');
+        };
+
         document.body.dataset.theme = settings.theme;
         
         if (settings.theme === 'dark') {
             applyThemeColors({ sidebar: '#495057', header: '#212529', toolbar: '#343a40', entryBackground: '#343a40' });
             root.style.setProperty('--background-color', '#212529');
             root.style.setProperty('--text-color', '#f8f9fa');
+            root.style.setProperty('--input-bg', '#343a40');
+            resetButtonColors();
         } else if (settings.theme === 'high-contrast') {
              applyThemeColors({ sidebar: '#000', header: '#000', toolbar: '#000', entryBackground: '#222' });
              root.style.setProperty('--background-color', '#111');
              root.style.setProperty('--text-color', '#fff');
+             root.style.setProperty('--input-bg', '#222');
+             
+             // High-contrast button colors for readability
              root.style.setProperty('--primary-color', '#ffff00');
+             root.style.setProperty('--btn-primary-text', '#000');
+             root.style.setProperty('--secondary-color', '#f8f9fa');
+             root.style.setProperty('--btn-secondary-text', '#212529');
+             root.style.setProperty('--danger-color', '#f5c6cb');
+             root.style.setProperty('--btn-danger-text', '#721c24');
+
         } else if (settings.theme === 'custom') {
             applyThemeColors(settings.customColors);
              root.style.setProperty('--background-color', '#f8f9fa');
              root.style.setProperty('--text-color', '#212529');
+             root.style.setProperty('--input-bg', '#e9ecef');
+             resetButtonColors();
         } else { // default
             applyThemeColors(DEFAULT_SETTINGS.customColors);
-            root.style.setProperty('--background-color', '#f8f9fa');
-            root.style.setProperty('--text-color', '#212529');
+            root.style.removeProperty('--background-color');
+            root.style.removeProperty('--text-color');
+            root.style.removeProperty('--input-bg');
+            resetButtonColors();
         }
 
     }, [settings]);
-
-    // Fetch entries for selected student
-    useEffect(() => {
-        if (selectedStudent?.id) {
-            getEntriesForStudentFromDB(selectedStudent.id)
-                .then(entries => {
-                    const filtered = studentDateFilter ? entries.filter(e => e.date === studentDateFilter) : entries;
-                    setStudentEntries(filtered);
-                })
-                .catch(err => console.error("Failed to fetch student entries:", err));
-        } else {
-            setStudentEntries([]);
-        }
-    }, [selectedStudent, studentDateFilter]);
-    
-    // Fetch entries for global date filter
-    useEffect(() => {
-        if (globalDateFilter) {
-            getEntriesForDateFromDB(globalDateFilter)
-                .then(setDayEntries)
-                .catch(err => console.error("Failed to fetch day entries:", err));
-        } else {
-            setDayEntries([]);
-        }
-    }, [globalDateFilter]);
     
     // Auto-select student from filter
      useEffect(() => {
@@ -160,7 +174,28 @@ const App = () => {
         }
     }, [filters.studentId, students]);
 
+    // Sync component state with current history state
+    useEffect(() => {
+        const currentState = history[historyIndex];
+        if (currentState) {
+            setStudents(currentState.students.sort((a,b) => a.name.localeCompare(b.name)));
+            setAllEntries(currentState.allEntries);
+        }
+    }, [history, historyIndex]);
+
     // --- FILTERING LOGIC ---
+    const studentEntries = useMemo(() => {
+        if (!selectedStudent?.id) return [];
+        const entriesForStudent = allEntries.filter(e => e.studentId === selectedStudent.id);
+        const filtered = studentDateFilter ? entriesForStudent.filter(e => e.date === studentDateFilter) : entriesForStudent;
+        return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }, [allEntries, selectedStudent, studentDateFilter]);
+
+    const dayEntries = useMemo(() => {
+        if (!globalDateFilter) return [];
+        return allEntries.filter(e => e.date === globalDateFilter);
+    }, [allEntries, globalDateFilter]);
+    
     const filteredStudents = useMemo(() => {
         return students
             .filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -177,6 +212,29 @@ const App = () => {
             classNames: [...new Set(students.map(s => s.className))].sort(),
         };
     }, [students]);
+
+    // --- HISTORY & STATE MANAGEMENT ---
+    const pushNewStateToHistory = async () => {
+        const newStudents = await getStudentsFromDB();
+        const newAllEntries = await getAllEntriesFromDB();
+        const newState = { students: newStudents, allEntries: newAllEntries };
+
+        const newHistory = history.slice(0, historyIndex + 1);
+        newHistory.push(newState);
+        setHistory(newHistory);
+        setHistoryIndex(newHistory.length - 1);
+    };
+
+    const handleUndo = () => {
+        if (canUndo) setHistoryIndex(historyIndex - 1);
+    };
+
+    const handleRedo = () => {
+        if (canRedo) setHistoryIndex(historyIndex + 1);
+    };
+
+    const canUndo = historyIndex > 0;
+    const canRedo = historyIndex < history.length - 1;
 
     // --- HANDLERS ---
     const handleSelectStudent = (student: Student) => {
@@ -195,65 +253,90 @@ const App = () => {
              if(studentToSelect) setSelectedStudent(studentToSelect);
         }
     };
-
-    const handleAddStudent = async (studentData: Omit<Student, 'id'>) => {
+    
+    const handleSaveStudent = async (studentData: Student | Omit<Student, 'id'>) => {
         try {
-            await addStudentToDB(studentData);
-            loadStudents();
+            if ('id' in studentData && studentData.id) {
+                await updateStudentInDB(studentData as Student);
+            } else {
+                await addStudentToDB(studentData as Omit<Student, 'id'>);
+            }
             setIsStudentModalOpen(false);
+            setStudentToEdit(null);
+            await pushNewStateToHistory();
         } catch (error) {
-            console.error("Failed to add student:", error);
+            console.error("Failed to save student:", error);
         }
     };
     
-    const handleSaveEntry = async (entryData: Omit<Entry, 'id' | 'studentId'>) => {
-        let studentIdForRefresh: number | undefined;
-        if (entryToEdit) { // Editing existing entry
-            const updatedEntry = { ...entryToEdit, ...entryData };
-            await updateEntryInDB(updatedEntry);
-            studentIdForRefresh = updatedEntry.studentId;
-        } else if (selectedStudent?.id) { // Creating new entry
-            const newEntry: Entry = {
-                ...entryData,
-                studentId: selectedStudent.id,
-            };
-            await addEntryToDB(newEntry);
-            studentIdForRefresh = newEntry.studentId;
-        }
-        setEntryToEdit(null);
-        setIsEntryModalOpen(false);
-        // Refresh entries
-        if (studentIdForRefresh) {
-            const entries = await getEntriesForStudentFromDB(studentIdForRefresh);
-            setStudentEntries(studentDateFilter ? entries.filter(e => e.date === studentDateFilter) : entries);
-        }
-        if (globalDateFilter) {
-            const entries = await getEntriesForDateFromDB(globalDateFilter);
-            setDayEntries(entries);
+    const handleManageStudent = () => {
+        if (selectedStudent) {
+            setStudentToEdit(selectedStudent);
+            setIsStudentModalOpen(true);
         }
     };
 
-    const handleEdit = () => {
+    const handleDeleteStudent = async () => {
+        const studentToDelete = studentToEdit;
+        if (studentToDelete?.id && window.confirm(`"${studentToDelete.name}" und alle zugehörigen Einträge wirklich löschen?`)) {
+            await deleteStudentFromDB(studentToDelete.id);
+            const studentIdToDelete = studentToDelete.id;
+
+            setIsStudentModalOpen(false);
+            setStudentToEdit(null);
+
+            setSelectedStudent(null);
+            if (String(studentIdToDelete) === filters.studentId) {
+                setFilters(prev => ({...prev, studentId: 'all' }));
+            }
+            await pushNewStateToHistory();
+        }
+    };
+
+    const handleNewEntry = () => {
+        if (selectedStudent) {
+            setEntryToEdit(null);
+            setIsEntryModalOpen(true);
+        }
+    };
+
+    const handleSaveEntry = async (entryData: Omit<Entry, 'id' | 'studentId'>) => {
+        try {
+            if (entryToEdit) { // Editing existing entry
+                const updatedEntry = { ...entryToEdit, ...entryData };
+                await updateEntryInDB(updatedEntry);
+            } else if (selectedStudent?.id) { // Creating new entry
+                const newEntry: Entry = {
+                    ...entryData,
+                    studentId: selectedStudent.id,
+                };
+                await addEntryToDB(newEntry);
+            }
+            setEntryToEdit(null);
+            setIsEntryModalOpen(false);
+            await pushNewStateToHistory();
+        } catch (error) {
+            console.error("Failed to save entry:", error);
+        }
+    };
+
+    const handleManageEntry = () => {
         if (selectedEntry) {
             setEntryToEdit(selectedEntry);
             setIsEntryModalOpen(true);
         }
     };
 
-    const handleDelete = async () => {
-        if (selectedEntry?.id && window.confirm("Diesen Eintrag wirklich löschen?")) {
-            const studentIdForRefresh = selectedEntry.studentId;
-            await deleteEntryFromDB(selectedEntry.id);
+    const handleDeleteEntry = async () => {
+        const entryToDelete = entryToEdit;
+        if (entryToDelete?.id && window.confirm("Diesen Eintrag wirklich löschen?")) {
+            await deleteEntryFromDB(entryToDelete.id);
+            
+            setIsEntryModalOpen(false);
+            setEntryToEdit(null);
+
             setSelectedEntry(null);
-            // Refresh entries
-            if (studentIdForRefresh) {
-                const entries = await getEntriesForStudentFromDB(studentIdForRefresh);
-                 setStudentEntries(studentDateFilter ? entries.filter(e => e.date === studentDateFilter) : entries);
-            }
-             if (globalDateFilter) {
-                const entries = await getEntriesForDateFromDB(globalDateFilter);
-                setDayEntries(entries);
-            }
+            await pushNewStateToHistory();
         }
     };
 
@@ -308,7 +391,17 @@ const App = () => {
         const savedSettings = localStorage.getItem('peda-protokoll-settings');
         if (savedSettings) {
             try {
-                setSettings(JSON.parse(savedSettings));
+                const parsedSettings = JSON.parse(savedSettings);
+                 // Migration for renamed setting key
+                if (parsedSettings.dropdownFontSize && !parsedSettings.inputFontSize) {
+                    parsedSettings.inputFontSize = parsedSettings.dropdownFontSize;
+                    delete parsedSettings.dropdownFontSize;
+                }
+                 // Migration for masterData
+                if (!parsedSettings.masterData) {
+                    parsedSettings.masterData = DEFAULT_SETTINGS.masterData;
+                }
+                setSettings({ ...DEFAULT_SETTINGS, ...parsedSettings });
             } catch {
                 setSettings(DEFAULT_SETTINGS);
             }
@@ -332,15 +425,20 @@ const App = () => {
             <Header onToggleNav={() => setIsNavVisible(!isNavVisible)} />
             {isNavVisible && <div className="backdrop" onClick={() => setIsNavVisible(false)}></div>}
             <Toolbar
-                onNewStudent={() => setIsStudentModalOpen(true)}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                canEditOrDelete={!!selectedEntry}
-                searchQuery={searchQuery}
-                onSearchChange={e => setSearchQuery(e.target.value)}
+                onNewStudent={() => { setStudentToEdit(null); setIsStudentModalOpen(true); }}
+                onManageStudent={handleManageStudent}
+                onNewEntry={handleNewEntry}
+                onManageEntry={handleManageEntry}
+                canManageStudent={!!selectedStudent}
+                canAddEntry={!!selectedStudent}
+                canManageEntry={!!selectedEntry}
                 onPrint={handlePrint}
                 onExport={handleExport}
                 onImport={handleImport}
+                onUndo={handleUndo}
+                onRedo={handleRedo}
+                canUndo={canUndo}
+                canRedo={canRedo}
             />
             <Navigation
                 students={filteredStudents}
@@ -356,6 +454,8 @@ const App = () => {
                 onOpenHelp={() => setIsHelpModalOpen(true)}
                 isNavVisible={isNavVisible}
                 onClose={() => setIsNavVisible(false)}
+                searchQuery={searchQuery}
+                onSearchChange={e => setSearchQuery(e.target.value)}
             />
             <main className="main-content">
                 {globalDateFilter ? (
@@ -374,7 +474,6 @@ const App = () => {
                         onSelectEntry={setSelectedEntry}
                         dateFilter={studentDateFilter}
                         onDateFilterChange={setStudentDateFilter}
-                        onNewEntry={() => { setEntryToEdit(null); setIsEntryModalOpen(true); }}
                     />
                 ) : (
                     <div className="no-entries">
@@ -386,8 +485,11 @@ const App = () => {
 
             {isStudentModalOpen && (
                 <StudentModal
-                    onClose={() => setIsStudentModalOpen(false)}
-                    onAddStudent={handleAddStudent}
+                    onClose={() => { setIsStudentModalOpen(false); setStudentToEdit(null); }}
+                    onSaveStudent={handleSaveStudent}
+                    onDeleteStudent={handleDeleteStudent}
+                    studentToEdit={studentToEdit}
+                    masterData={settings.masterData}
                 />
             )}
             {isEntryModalOpen && studentForModal && (
@@ -395,6 +497,7 @@ const App = () => {
                     student={studentForModal}
                     onClose={() => { setIsEntryModalOpen(false); setEntryToEdit(null); }}
                     onSaveEntry={handleSaveEntry}
+                    onDeleteEntry={handleDeleteEntry}
                     entryToEdit={entryToEdit}
                 />
             )}

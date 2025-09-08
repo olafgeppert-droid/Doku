@@ -6,10 +6,11 @@ interface EntryModalProps {
     student: Student;
     onClose: () => void;
     onSaveEntry: (entryData: Omit<Entry, 'id' | 'studentId'>) => void;
+    onDeleteEntry: () => void;
     entryToEdit: Entry | null;
 }
 
-const EntryModal = ({ student, onClose, onSaveEntry, entryToEdit }: EntryModalProps) => {
+const EntryModal = ({ student, onClose, onSaveEntry, onDeleteEntry, entryToEdit }: EntryModalProps) => {
     // FIX: Explicitly type the state to prevent TypeScript from widening `erfolgRating` to `string`.
     // This ensures `formData` matches the type expected by `onSaveEntry`.
     const [formData, setFormData] = useState<Omit<Entry, 'id' | 'studentId'>>({
@@ -60,6 +61,7 @@ const EntryModal = ({ student, onClose, onSaveEntry, entryToEdit }: EntryModalPr
                         </div>
                     </div>
                     <div className="modal-actions">
+                        {entryToEdit && <button type="button" className="btn btn-danger" onClick={onDeleteEntry} style={{ marginRight: 'auto' }}>🗑️ Löschen</button>}
                         <button type="button" className="btn btn-secondary" onClick={onClose}>❌ Abbrechen</button>
                         <button type="submit" className="btn btn-primary">✔️ Eintrag speichern</button>
                     </div>

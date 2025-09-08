@@ -1,7 +1,7 @@
 :root {
     --primary-color: #007bff;
-    --secondary-color: #6c757d;
-    --danger-color: #dc3545;
+    --secondary-color: #5a6268; /* Darker gray for accessibility */
+    --danger-color: #c82333;   /* Darker red for accessibility */
     --background-color: #f8f9fa;
     --text-color: #212529;
     --card-bg: #fff;
@@ -11,7 +11,12 @@
     --sidebar-bg: #e9ecef;
     --toolbar-bg: #f8f9fa;
     --font-size: 16px;
+    --input-font-size: 16px;
     --uniform-control-width: 240px;
+    --input-bg: #e9ecef; /* A medium gray for input fields */
+    --btn-primary-text: #fff;
+    --btn-secondary-text: #fff;
+    --btn-danger-text: #fff;
 }
 
 body {
@@ -71,23 +76,79 @@ input, select, textarea, button {
 .toolbar {
     grid-area: toolbar;
     background-color: var(--toolbar-bg);
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 1rem;
     border-bottom: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.toolbar-row {
     display: flex;
     gap: 0.5rem;
     align-items: center;
     flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
 }
 
 .toolbar .btn {
-    width: 140px;
+    flex-grow: 1;
+    padding: 0.6rem 1.2rem;
+    font-size: 1.1rem;
+    font-weight: 500;
 }
 
 .filter-group select,
 .filter-group input,
-.navigation-actions .btn,
 .date-filter input {
     width: var(--uniform-control-width);
+    box-sizing: border-box;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.375rem 0.75rem;
+    color: var(--text-color);
+}
+
+.date-filter-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.date-filter-wrapper input[type="date"] {
+    flex-grow: 1;
+    width: auto;
+}
+
+.btn-clear {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    background-color: var(--sidebar-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 0.25rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s, color 0.15s;
+}
+
+.btn-clear:hover:not(:disabled) {
+    background-color: var(--secondary-color);
+    color: #fff;
+    border-color: var(--secondary-color);
+}
+
+.btn-clear:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.navigation-actions .btn {
+     width: var(--uniform-control-width);
     box-sizing: border-box;
 }
 
@@ -185,7 +246,7 @@ input, select, textarea, button {
 
 .btn:active {
     box-shadow: none !important;
-    transform: translateY(3px);
+    transform: translateY(1px);
 }
 
 .btn:disabled {
@@ -194,24 +255,21 @@ input, select, textarea, button {
 }
 
 .btn-primary {
-    color: #fff;
-    background-color: #007bff;
-    border-color: #007bff;
-    box-shadow: 0 3px #0056b3;
+    color: var(--btn-primary-text);
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
 }
 
 .btn-secondary {
-    color: #fff;
-    background-color: #6c757d;
-    border-color: #6c757d;
-    box-shadow: 0 3px #545b62;
+    color: var(--btn-secondary-text);
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
 }
 
 .btn-danger {
-    color: #fff;
-    background-color: #dc3545;
-    border-color: #dc3545;
-    box-shadow: 0 3px #b21f2d;
+    color: var(--btn-danger-text);
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
 }
 
 .btn-primary:disabled,
@@ -226,8 +284,16 @@ input, select, textarea, button {
 
 .form-group { margin-bottom: 1rem; }
 .form-group label { display: block; margin-bottom: 0.5rem; }
-.form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.5rem; box-sizing: border-box; background-color: var(--card-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 4px; }
+.form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.5rem; box-sizing: border-box; background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 4px; }
 textarea { min-height: 80px; }
+
+/* Set font size for all user editable fields based on settings */
+.form-group input:not([type="radio"]), .form-group select, .form-group textarea,
+.filter-group select, .filter-group input,
+.search-bar-nav input,
+.date-filter input {
+    font-size: var(--input-font-size);
+}
 
 .validation-error {
     color: var(--danger-color);
@@ -247,19 +313,22 @@ textarea { min-height: 80px; }
     margin-bottom: 0;
 }
 
-.filter-group { margin-bottom: 1rem; width: var(--uniform-control-width); }
+.filter-group { margin-bottom: 1.5rem; width: var(--uniform-control-width); }
 .filter-group label { display: block; font-weight: bold; margin-bottom: 0.25rem; }
 .no-entries { text-align: center; padding: 2rem; color: #6c757d; }
 
-.search-bar { position: relative; }
-.search-bar::before { content: '🔍'; position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); pointer-events: none; }
-.search-bar input { 
-    width: 180px;
-    padding: 0.375rem 0.75rem; 
-    padding-left: 2.5rem; 
+.search-bar-nav {
+    margin-bottom: 1rem;
+    width: var(--uniform-control-width);
+}
+.search-bar-nav input {
+    width: 100%;
+    padding: 0.375rem 0.75rem;
     box-sizing: border-box;
-    border-radius: 0.25rem; 
-    border: 1px solid var(--border-color); 
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background-color: var(--input-bg);
+    color: var(--text-color);
 }
 
 .settings-group { margin-bottom: 1.5rem; }

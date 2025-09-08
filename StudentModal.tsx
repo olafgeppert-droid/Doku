@@ -1,14 +1,18 @@
 /** @jsxImportSource react */
-import React, { useState } from 'react';
-import type { Student } from './types';
+import React, { useState, useEffect, useMemo } from 'react';
+import type { Student, MasterData } from './types';
 import { capitalizeWords } from './utils';
+import { FAVORITE_NATIONALITIES, ALL_NATIONALITIES } from './nationalities';
 
 interface StudentModalProps {
     onClose: () => void;
-    onAddStudent: (student: Omit<Student, 'id'>) => void;
+    onSaveStudent: (student: Student | Omit<Student, 'id'>) => void;
+    onDeleteStudent: () => void;
+    studentToEdit?: Student | null;
+    masterData: MasterData;
 }
 
-const StudentModal = ({ onClose, onAddStudent }: StudentModalProps) => {
+const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, masterData }: StudentModalProps) => {
     const [formData, setFormData] = useState({ 
         name: '', 
         schoolYear: '', 
@@ -20,61 +24,121 @@ const StudentModal = ({ onClose, onAddStudent }: StudentModalProps) => {
     });
     const [validationError, setValidationError] = useState('');
 
+    useEffect(() => {
+        if (studentToEdit) {
+            setFormData({
+                name: studentToEdit.name || '',
+                schoolYear: studentToEdit.schoolYear || '',
+                school: studentToEdit.school || '',
+                className: studentToEdit.className || '',
+                gender: studentToEdit.gender || '',
+                nationality: studentToEdit.nationality || '',
+                germanLevel: studentToEdit.germanLevel || ''
+            });
+        }
+    }, [studentToEdit]);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({...prev, [name]: value}));
+        if (name === 'school') {
+            // When school changes, reset the class name to ensure a valid selection
+            setFormData(prev => ({...prev, school: value, className: ''}));
+        } else {
+            setFormData(prev => ({...prev, [name]: value}));
+        }
     }
+    
+    const classOptions = useMemo(() => {
+        if (!formData.school || !masterData.schools[formData.school]) {
+            return [];
+        }
+        return masterData.schools[formData.school];
+    }, [formData.school, masterData.schools]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setValidationError('');
 
-        // Validate School Year Format
-        const schoolYearRegex = /^\d{4}\/\d{4}$/;
-        if (!schoolYearRegex.test(formData.schoolYear.trim())) {
-            setValidationError('Schuljahr muss im Format JJJJ/JJJJ sein (z.B. 2023/2024).');
+        const { name, schoolYear, school, gender } = formData;
+
+        // --- Validation ---
+        const errors: string[] = [];
+        if (!name.trim()) errors.push('Name');
+        if (!schoolYear) errors.push('Schuljahr');
+        if (!school) errors.push('Schule');
+        if (!gender) errors.push('Geschlecht');
+
+        if (errors.length > 0) {
+            setValidationError(`Bitte füllen Sie die Pflichtfelder aus: ${errors.join(', ')}.`);
             return;
         }
+        // --- End Validation ---
 
-        // Check required fields
-        if (formData.name.trim() && formData.schoolYear.trim() && formData.school.trim() && formData.className.trim()) {
-            
-            const formattedData = {
-                ...formData,
-                name: capitalizeWords(formData.name.trim()),
-                school: capitalizeWords(formData.school.trim()),
-                className: capitalizeWords(formData.className.trim()),
-                nationality: capitalizeWords(formData.nationality.trim()),
-                schoolYear: formData.schoolYear.trim(),
-            };
-            
-            onAddStudent(formattedData);
-            onClose();
+        setValidationError(''); // Clear error on success
+
+        const formattedData = {
+            ...formData,
+            name: capitalizeWords(name.trim()),
+        };
+        
+        if (studentToEdit) {
+            onSaveStudent({ ...formattedData, id: studentToEdit.id });
+        } else {
+            onSaveStudent(formattedData);
         }
     };
 
     return (
         <div className="modal-backdrop">
             <div className="modal-content">
-                <h2>Neues Kind anlegen</h2>
+                <h2>{studentToEdit ? 'Kind bearbeiten' : 'Neues Kind anlegen'}</h2>
                 <form onSubmit={handleSubmit}>
-                    <div className="form-group"><label htmlFor="name">Name des Kindes</label><input id="name" name="name" type="text" value={formData.name} onChange={handleChange} required autoFocus /></div>
+                    <div className="form-group"><label htmlFor="name">Name des Kindes *</label><input id="name" name="name" type="text" value={formData.name} onChange={handleChange} placeholder="z.B. Max Mustermann" autoFocus /></div>
                     <div className="form-group">
-                        <label htmlFor="schoolYear">Schuljahr</label>
-                        <input id="schoolYear" name="schoolYear" type="text" value={formData.schoolYear} onChange={handleChange} placeholder="z.B. 2023/2024" required />
-                        {validationError && <p className="validation-error">{validationError}</p>}
+                        <label htmlFor="schoolYear">Schuljahr *</label>
+                        <select id="schoolYear" name="schoolYear" value={formData.schoolYear} onChange={handleChange}>
+                            <option value="">Bitte wählen...</option>
+                            {masterData.schoolYears.map(year => <option key={year} value={year}>{year}</option>)}
+                        </select>
                     </div>
-                    <div className="form-group"><label htmlFor="school">Schule</label><input id="school" name="school" type="text" value={formData.school} onChange={handleChange} required /></div>
-                    <div className="form-group"><label htmlFor="className">Klasse</label><input id="className" name="className" type="text" value={formData.className} onChange={handleChange} required /></div>
-                    <div className="form-group"><label htmlFor="gender">Geschlecht</label>
+                    <div className="form-group">
+                        <label htmlFor="school">Schule *</label>
+                        <select id="school" name="school" value={formData.school} onChange={handleChange}>
+                            <option value="">Bitte wählen...</option>
+                            {Object.keys(masterData.schools).sort().map(school => <option key={school} value={school}>{school}</option>)}
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="className">Klasse</label>
+                        <select id="className" name="className" value={formData.className} onChange={handleChange} disabled={!formData.school}>
+                            <option value="">Bitte wählen...</option>
+                            {classOptions.map(className => <option key={className} value={className}>{className}</option>)}
+                        </select>
+                    </div>
+                    <div className="form-group"><label htmlFor="gender">Geschlecht *</label>
                         <select id="gender" name="gender" value={formData.gender} onChange={handleChange}>
-                            <option value="">Keine Angabe</option>
+                            <option value="">Bitte wählen...</option>
                             <option value="männlich">Männlich</option>
                             <option value="weiblich">Weiblich</option>
                             <option value="divers">Divers</option>
                         </select>
                     </div>
-                     <div className="form-group"><label htmlFor="nationality">Nationalität</label><input id="nationality" name="nationality" type="text" value={formData.nationality} onChange={handleChange} /></div>
+                     <div className="form-group"><label htmlFor="nationality">Nationalität</label>
+                        <select id="nationality" name="nationality" value={formData.nationality} onChange={handleChange}>
+                            <option value="">Keine Angabe</option>
+                            <optgroup label="Favoriten">
+                                {FAVORITE_NATIONALITIES.map(nation => (
+                                    <option key={nation} value={nation}>{nation}</option>
+                                ))}
+                            </optgroup>
+                            <optgroup label="Alle Nationen">
+                                {ALL_NATIONALITIES
+                                    .filter(nation => !FAVORITE_NATIONALITIES.includes(nation))
+                                    .map(nation => (
+                                        <option key={nation} value={nation}>{nation}</option>
+                                ))}
+                            </optgroup>
+                        </select>
+                     </div>
                     <div className="form-group"><label htmlFor="germanLevel">Spricht Deutsch (Schulnote)</label>
                         <select id="germanLevel" name="germanLevel" value={formData.germanLevel} onChange={handleChange}>
                             <option value="">Nicht beurteilt</option>
@@ -86,7 +150,9 @@ const StudentModal = ({ onClose, onAddStudent }: StudentModalProps) => {
                             <option value="6">6 (Ungenügend)</option>
                         </select>
                     </div>
+                     {validationError && <p className="validation-error" style={{ marginBottom: '1rem' }}>{validationError}</p>}
                     <div className="modal-actions">
+                        {studentToEdit && <button type="button" className="btn btn-danger" onClick={onDeleteStudent} style={{ marginRight: 'auto' }}>🗑️ Löschen</button>}
                         <button type="button" className="btn btn-secondary" onClick={onClose}>❌ Abbrechen</button>
                         <button type="submit" className="btn btn-primary">✔️ Speichern</button>
                     </div>

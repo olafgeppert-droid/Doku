@@ -1,3 +1,4 @@
+
 /** @jsxImportSource react */
 import type { Student, Entry } from './types';
 
@@ -55,6 +56,40 @@ export const addStudentToDB = (student: Student): Promise<number> => new Promise
     tx.onerror = () => reject(tx.error);
 });
 
+export const updateStudentInDB = (student: Student): Promise<number> => new Promise((resolve, reject) => {
+    if (!db) return reject("DB not initialized");
+    const tx = db.transaction([STUDENT_STORE], 'readwrite').objectStore(STUDENT_STORE).put(student);
+    tx.onsuccess = () => resolve(tx.result as number);
+    tx.onerror = () => reject(tx.error);
+});
+
+export const deleteStudentFromDB = (studentId: number): Promise<void> => new Promise((resolve, reject) => {
+    if (!db) return reject("DB not initialized");
+    const tx = db.transaction([STUDENT_STORE, ENTRY_STORE], 'readwrite');
+    const studentStore = tx.objectStore(STUDENT_STORE);
+    const entryStore = tx.objectStore(ENTRY_STORE);
+    const entryIndex = entryStore.index('studentId');
+
+    // 1. Delete student
+    const deleteStudentRequest = studentStore.delete(studentId);
+    deleteStudentRequest.onerror = () => reject(deleteStudentRequest.error);
+
+    // 2. Find and delete all entries for that student
+    const getEntriesRequest = entryIndex.openCursor(IDBKeyRange.only(studentId));
+    getEntriesRequest.onerror = () => reject(getEntriesRequest.error);
+    getEntriesRequest.onsuccess = () => {
+        const cursor = getEntriesRequest.result;
+        if (cursor) {
+            cursor.delete();
+            cursor.continue();
+        }
+    };
+
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+});
+
+
 export const getStudentsFromDB = (): Promise<Student[]> => new Promise((resolve, reject) => {
     if (!db) return reject("DB not initialized");
     const tx = db.transaction([STUDENT_STORE], 'readonly').objectStore(STUDENT_STORE).getAll();
@@ -89,17 +124,6 @@ export const deleteEntryFromDB = (id: number): Promise<void> => new Promise((res
     const tx = db.transaction([ENTRY_STORE], 'readwrite').objectStore(ENTRY_STORE).delete(id);
     tx.onsuccess = () => resolve();
     tx.onerror = () => reject(tx.error);
-});
-
-export const getEntriesForStudentFromDB = (studentId: number): Promise<Entry[]> => new Promise((resolve, reject) => {
-    if (!db) return reject("DB not initialized");
-    const index = db.transaction([ENTRY_STORE], 'readonly').objectStore(ENTRY_STORE).index('studentId');
-    const request = index.getAll(studentId);
-    request.onsuccess = () => {
-        const sortedEntries = request.result.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        resolve(sortedEntries);
-    };
-    request.onerror = () => reject(request.error);
 });
 
 export const getEntriesForDateFromDB = (date: string): Promise<Entry[]> => new Promise((resolve, reject) => {

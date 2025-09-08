@@ -1,3 +1,4 @@
+
 /** @jsxImportSource react */
 import React from 'react';
 import type { Student, Entry } from './types';
@@ -9,23 +10,23 @@ interface StudentDetailsProps {
     onSelectEntry: (entry: Entry) => void;
     dateFilter: string;
     onDateFilterChange: (date: string) => void;
-    onNewEntry: () => void;
 }
 
-const StudentDetails = ({ student, entries, selectedEntry, onSelectEntry, dateFilter, onDateFilterChange, onNewEntry }: StudentDetailsProps) => {
+const StudentDetails = ({ student, entries, selectedEntry, onSelectEntry, dateFilter, onDateFilterChange }: StudentDetailsProps) => {
     
     const getErfolgRatingText = (rating: Entry['erfolgRating']) => {
         if (rating === 'positiv') return ' (Positiv)';
         if (rating === 'negativ') return ' (Negativ)';
         return '';
     }
+    
+    const today = new Date().toISOString().split('T')[0];
 
     return (
         <div>
             <div className="student-details-header">
                 <div className="student-details-title-group">
                     <h2>Protokolle für {student.name}</h2>
-                    <button className="btn btn-primary" onClick={onNewEntry}>✨ Neuer Eintrag</button>
                 </div>
                  <div className="student-info">
                     {student.gender && <span><strong>Geschlecht:</strong> {student.gender}</span>}
@@ -34,7 +35,25 @@ const StudentDetails = ({ student, entries, selectedEntry, onSelectEntry, dateFi
                 </div>
                 <div className="date-filter">
                     <label htmlFor="dateFilter">Einträge filtern nach Tag:</label>
-                    <input id="dateFilter" type="date" value={dateFilter} onChange={e => onDateFilterChange(e.target.value)} />
+                    <div className="date-filter-wrapper">
+                        <input id="dateFilter" type="date" value={dateFilter} onChange={e => onDateFilterChange(e.target.value)} />
+                        <button
+                            onClick={() => onDateFilterChange(today)}
+                            className="btn-clear"
+                            title="Auf heute setzen"
+                            disabled={dateFilter === today}
+                        >
+                            Zurücksetzen
+                        </button>
+                        <button
+                            onClick={() => onDateFilterChange('')}
+                            className="btn-clear"
+                            title="Datum löschen"
+                            disabled={!dateFilter}
+                        >
+                            Löschen
+                        </button>
+                    </div>
                 </div>
             </div>
             {entries.length === 0 ? (

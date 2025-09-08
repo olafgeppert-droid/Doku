@@ -16,6 +16,8 @@ interface NavigationProps {
     onOpenHelp: () => void;
     isNavVisible: boolean;
     onClose: () => void;
+    searchQuery: string;
+    onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const Navigation = ({ 
@@ -31,7 +33,9 @@ const Navigation = ({
     onOpenSettings, 
     onOpenHelp,
     isNavVisible,
-    onClose
+    onClose,
+    searchQuery,
+    onSearchChange,
 }: NavigationProps) => {
     const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
         setFilters(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -41,10 +45,13 @@ const Navigation = ({
         onSelectStudent(student);
         onClose(); // Close mobile nav on selection
     };
-
+    
     return (
         <aside className={`navigation ${isNavVisible ? 'visible' : ''}`}>
             <h2>Navigation</h2>
+            <div className="search-bar-nav">
+                <input type="search" placeholder="🔍 Kind suchen..." value={searchQuery} onChange={onSearchChange} />
+            </div>
             <div className="filter-group">
                 <label htmlFor="schoolYear">Schuljahr</label>
                 <select id="schoolYear" name="schoolYear" value={filters.schoolYear} onChange={handleFilterChange}>
@@ -75,7 +82,17 @@ const Navigation = ({
             </div>
             <div className="filter-group">
                 <label htmlFor="globalDateFilter">Tag</label>
-                <input id="globalDateFilter" name="globalDateFilter" type="date" value={globalDateFilter} onChange={e => onGlobalDateChange(e.target.value)} />
+                <div className="date-filter-wrapper">
+                    <input id="globalDateFilter" name="globalDateFilter" type="date" value={globalDateFilter} onChange={e => onGlobalDateChange(e.target.value)} />
+                    <button
+                        onClick={() => onGlobalDateChange('')}
+                        className="btn-clear"
+                        title="Datum löschen"
+                        disabled={!globalDateFilter}
+                    >
+                        Löschen
+                    </button>
+                </div>
             </div>
             <ul className="student-list">
                 {students.map(student => (

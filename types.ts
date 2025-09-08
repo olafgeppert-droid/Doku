@@ -22,13 +22,22 @@ export interface Entry {
   erfolgRating: 'positiv' | 'negativ' | ''; // Bewertung des Erfolgs
 }
 
+export interface MasterData {
+    schoolYears: string[];
+    schools: {
+        [schoolName: string]: string[]; // e.g., { 'Grundschule A': ['1a', '1b'] }
+    };
+}
+
 export interface Settings {
     theme: 'default' | 'dark' | 'high-contrast' | 'custom';
     fontSize: number;
+    inputFontSize: number;
     customColors: {
         sidebar: string;
         header: string;
         toolbar: string;
         entryBackground: string;
     };
+    masterData: MasterData;
 }

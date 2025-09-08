@@ -1,6 +1,7 @@
 /** @jsxImportSource react */
 import React, { useState } from 'react';
-import type { Settings } from './types';
+import type { Settings, MasterData } from './types';
+import MasterDataModal from './MasterDataModal';
 
 interface SettingsModalProps {
     onClose: () => void;
@@ -11,6 +12,7 @@ interface SettingsModalProps {
 
 const SettingsModal = ({ onClose, onSave, currentSettings, version }: SettingsModalProps) => {
     const [settings, setSettings] = useState(currentSettings);
+    const [isMasterDataModalOpen, setIsMasterDataModalOpen] = useState(false);
 
     const handleThemeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSettings(s => ({ ...s, theme: e.target.value as Settings['theme'] }));
@@ -18,6 +20,10 @@ const SettingsModal = ({ onClose, onSave, currentSettings, version }: SettingsMo
 
     const handleFontSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSettings(s => ({ ...s, fontSize: parseInt(e.target.value, 10) }));
+    };
+
+    const handleInputFontSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSettings(s => ({ ...s, inputFontSize: parseInt(e.target.value, 10) }));
     };
 
     const handleCustomColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,6 +39,11 @@ const SettingsModal = ({ onClose, onSave, currentSettings, version }: SettingsMo
 
     const handleSave = () => {
         onSave(settings);
+    };
+    
+    const handleMasterDataUpdate = (newMasterData: MasterData) => {
+        setSettings(s => ({ ...s, masterData: newMasterData }));
+        setIsMasterDataModalOpen(false);
     };
 
     return (
@@ -81,13 +92,28 @@ const SettingsModal = ({ onClose, onSave, currentSettings, version }: SettingsMo
                     )}
                 </div>
                 <div className="settings-group">
-                    <h3>Schriftgröße</h3>
+                    <h3>Schriftgröße Labels</h3>
                     <div className="font-size-slider">
                         <span>A</span>
-                        <input type="range" min="12" max="35" step="1" value={settings.fontSize} onChange={handleFontSizeChange} />
+                        <input type="range" min="12" max="35" step="1" value={settings.fontSize} onChange={handleFontSizeChange} aria-label="Schriftgröße" />
                         <span>A</span>
                         <span>{settings.fontSize}px</span>
                     </div>
+                </div>
+                <div className="settings-group">
+                    <h3>Schriftgröße Eingabefelder</h3>
+                    <div className="font-size-slider">
+                        <span>A</span>
+                        <input type="range" min="10" max="30" step="1" value={settings.inputFontSize ?? 16} onChange={handleInputFontSizeChange} aria-label="Schriftgröße für Eingabefelder" />
+                        <span>A</span>
+                        <span>{settings.inputFontSize ?? 16}px</span>
+                    </div>
+                </div>
+                 <div className="settings-group">
+                    <h3>Stammdaten</h3>
+                    <button type="button" className="btn btn-secondary" onClick={() => setIsMasterDataModalOpen(true)}>
+                        Stammdaten verwalten...
+                    </button>
                 </div>
                 <div className="modal-actions">
                     <button type="button" className="btn btn-secondary" onClick={onClose}>❌ Abbrechen</button>
@@ -97,6 +123,13 @@ const SettingsModal = ({ onClose, onSave, currentSettings, version }: SettingsMo
                     Version {version}
                 </div>
             </div>
+            {isMasterDataModalOpen && (
+                <MasterDataModal
+                    masterData={settings.masterData}
+                    onSave={handleMasterDataUpdate}
+                    onClose={() => setIsMasterDataModalOpen(false)}
+                />
+            )}
         </div>
     );
 };
