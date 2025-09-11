@@ -6,7 +6,7 @@ interface EntryModalProps {
     student: Student;
     onClose: () => void;
     onSaveEntry: (entryData: Omit<Entry, 'id' | 'studentId'>) => void;
-    onDeleteEntry: () => void; // No longer accepts a parameter
+    onDeleteEntry: (entry: Entry) => void;
     entryToEdit: Entry | null;
 }
 
@@ -64,8 +64,9 @@ const EntryModal = ({ student, onClose, onSaveEntry, onDeleteEntry, entryToEdit 
                             <button 
                                 type="button" 
                                 className="btn btn-danger" 
-                                onClick={onDeleteEntry} // Simply call the prop
+                                onClick={() => onDeleteEntry(entryToEdit)}
                                 style={{ marginRight: 'auto' }}
+                                disabled={!entryToEdit}
                             >
                                 🗑️ Löschen
                             </button>

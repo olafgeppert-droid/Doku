@@ -3,7 +3,7 @@ import { openDB, IDBPDatabase } from 'idb';
 import type { Student, Entry } from './types';
 
 const DB_NAME = "peda-protokoll";
-const DB_VERSION = 3; 
+export const DB_VERSION = 4; 
 const STUDENT_STORE = 'students';
 const ENTRY_STORE = 'entries';
 
@@ -16,24 +16,40 @@ const getDB = (): Promise<IDBPDatabase> => {
         dbPromise = openDB(DB_NAME, DB_VERSION, {
             upgrade(db, oldVersion, newVersion, tx) {
                 console.log(`Upgrading DB from version ${oldVersion} to ${newVersion}`);
-                // Student store setup
-                if (!db.objectStoreNames.contains(STUDENT_STORE)) {
-                    db.createObjectStore(STUDENT_STORE, { keyPath: "id", autoIncrement: true });
+                
+                // Student store
+                if (oldVersion < 1) {
+                    if (!db.objectStoreNames.contains(STUDENT_STORE)) {
+                        db.createObjectStore(STUDENT_STORE, { keyPath: "id", autoIncrement: true });
+                    }
                 }
-
-                // Entry store setup
-                if (!db.objectStoreNames.contains(ENTRY_STORE)) {
-                    const store = db.createObjectStore(ENTRY_STORE, { keyPath: "id", autoIncrement: true });
-                    store.createIndex("studentId", "studentId", { unique: false });
-                    store.createIndex("date", "date", { unique: false });
-                } else {
-                    const entryStore = tx.objectStore(ENTRY_STORE);
-                    if (!entryStore.indexNames.contains('studentId')) {
-                         entryStore.createIndex("studentId", "studentId", { unique: false });
+            
+                // Entry store mit Indizes
+                if (oldVersion < 2) {
+                    if (!db.objectStoreNames.contains(ENTRY_STORE)) {
+                        const store = db.createObjectStore(ENTRY_STORE, { keyPath: "id", autoIncrement: true });
+                        store.createIndex("studentId", "studentId", { unique: false });
+                        store.createIndex("date", "date", { unique: false });
                     }
-                     if (!entryStore.indexNames.contains('date')) {
-                         entryStore.createIndex("date", "date", { unique: false });
+                }
+            
+                // Indizes sicherstellen für Version 3
+                if (oldVersion < 3) {
+                     if (db.objectStoreNames.contains(ENTRY_STORE)) {
+                        const entryStore = tx.objectStore(ENTRY_STORE);
+                        if (!entryStore.indexNames.contains('studentId')) {
+                            entryStore.createIndex("studentId", "studentId", { unique: false });
+                        }
+                        if (!entryStore.indexNames.contains('date')) {
+                            entryStore.createIndex("date", "date", { unique: false });
+                        }
                     }
+                }
+            
+                // Datenbereinigung für Version 4
+                if (oldVersion < 4) {
+                    console.log("Performing data cleanup for version 4");
+                    // Hier könnten Datenmigrationen stattfinden
                 }
             },
         });
@@ -102,11 +118,32 @@ export const getStudentsFromDB = async (): Promise<Student[]> => {
 
 export const deleteStudentFromDB = async (studentId: number): Promise<void> => {
     const db = await getDB();
-    const entryKeysToDelete = await db.getAllKeysFromIndex("entries", "studentId", studentId);
-    const tx = db.transaction(["students", "entries"], "readwrite");
-    entryKeysToDelete.forEach(key => tx.objectStore("entries").delete(key));
-    tx.objectStore("students").delete(studentId);
-    await tx.done;
+    
+    try {
+        console.log(`Deleting student ${studentId} and related entries...`);
+        
+        // Zuerst die zugehörigen Einträge finden
+        const entryKeysToDelete = await db.getAllKeysFromIndex("entries", "studentId", studentId);
+        console.log(`Found ${entryKeysToDelete.length} entries to delete for student ${studentId}`);
+        
+        // Dann eine einzige Transaktion für alle Löschvorgänge starten
+        const tx = db.transaction(["students", "entries"], "readwrite");
+        
+        // Einträge löschen
+        for (const key of entryKeysToDelete) {
+            tx.objectStore("entries").delete(key);
+        }
+        
+        // Student löschen
+        tx.objectStore("students").delete(studentId);
+        
+        await tx.done;
+        console.log(`Successfully deleted student ${studentId} and ${entryKeysToDelete.length} entries`);
+        
+    } catch (error) {
+        console.error("Error in deleteStudentFromDB:", error);
+        throw new Error(`Could not delete student ${studentId}: ${error}`);
+    }
 };
 
 // --- Entry Operations ---

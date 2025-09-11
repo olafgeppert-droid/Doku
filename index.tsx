@@ -18,6 +18,7 @@ import StatisticsModal from './StatisticsModal';
 import type { Student, Entry, Settings } from './types';
 import {
     initDB,
+    DB_VERSION,
     addStudentToDB,
     getStudentsFromDB,
     addEntryToDB,
@@ -57,6 +58,10 @@ type HistoryState = {
 };
 
 const App = () => {
+    // Debugging
+    console.log("App component mounting");
+    console.log("DB Version:", DB_VERSION);
+    
     // Data state
     const [students, setStudents] = useState<Student[]>([]);
     const [allEntries, setAllEntries] = useState<Entry[]>([]);
@@ -214,9 +219,9 @@ const App = () => {
     }, [filters.school, filters.className, filterOptions.classNames]);
     
     // Auto-select student from filter
-     useEffect(() => {
+    useEffect(() => {
         if (filters.studentId !== 'all') {
-            const studentToSelect = students.find(s => String(s.id) === filters.studentId);
+            const studentToSelect = students.find(s => s.id === Number(filters.studentId)); // ✅ Number()
             if (studentToSelect && selectedStudent?.id !== studentToSelect.id) {
                 handleSelectStudent(studentToSelect);
             }
@@ -250,7 +255,7 @@ const App = () => {
             .filter(s => filters.schoolYear === 'all' || s.schoolYear === filters.schoolYear)
             .filter(s => filters.school === 'all' || s.school === filters.school)
             .filter(s => filters.className === 'all' || s.className === filters.className)
-            .filter(s => filters.studentId === 'all' || String(s.id) === filters.studentId);
+            .filter(s => filters.studentId === 'all' || s.id === Number(filters.studentId)); // ✅ Number()
     }, [students, searchQuery, filters]);
 
     // --- HISTORY & STATE MANAGEMENT ---
@@ -334,34 +339,42 @@ const App = () => {
         }
     };
 
-    const handleDeleteStudent = async () => {
-        const studentToDelete = studentToEdit; // Use the student from the state
+    const handleDeleteStudent = async (studentToDelete: Student) => {
+        console.log("DELETE STUDENT CALLED:", studentToDelete);
+        
         if (!studentToDelete?.id) {
-            console.error("[App] Kein gültiger Student zum Löschen im State:", studentToDelete);
+            console.error("[App] Kein gültiger Student zum Löschen:", studentToDelete);
             alert("Kein gültiges Kind zum Löschen ausgewählt. Aktion abgebrochen.");
             return;
         }
+        
         if (!window.confirm(`"${studentToDelete.name}" und alle zugehörigen Einträge wirklich löschen?`)) return;
     
         try {
-            console.log("[App] Lösche Student aus State:", studentToDelete);
+            console.log("[App] Lösche Student aus DB:", studentToDelete.id, studentToDelete.name);
             await deleteStudentFromDB(studentToDelete.id);
+            console.log("[App] DB-Löschen erfolgreich, lade Daten neu...");
+            
             await forceDataRefresh();
+            console.log("[App] Datenrefresh abgeschlossen");
     
             setIsStudentModalOpen(false);
             setStudentToEdit(null);
             
             if (selectedStudent?.id === studentToDelete.id) {
                 setSelectedStudent(null);
+                console.log("[App] SelectedStudent zurückgesetzt");
             }
             
             if (String(studentToDelete.id) === filters.studentId) {
                 setFilters(prev => ({ ...prev, studentId: 'all' }));
+                console.log("[App] Filter zurückgesetzt");
             }
-             console.log("[App] Löschen abgeschlossen, DB neu geladen.");
+            
+            console.log("[App] Löschen komplett abgeschlossen");
         } catch (error) {
             console.error("Fehler beim Löschen des Kindes:", error);
-            alert("Fehler beim Löschen des Kindes. Bitte Konsole prüfen.");
+            alert("Fehler beim Löschen des Kindes. Bitte Browser-Konsole prüfen.");
         }
     };
 
@@ -400,10 +413,10 @@ const App = () => {
         }
     };
 
-    const handleDeleteEntry = async () => {
-        const entryToDelete = entryToEdit; // Use the entry from the state
+    const handleDeleteEntry = async (entryToDelete: Entry) => {
         if (!entryToDelete?.id) {
-            console.error("[App] Kein gültiger Eintrag zum Löschen im State:", entryToDelete);
+            console.error("[App] Kein gültiger Eintrag zum Löschen übergeben:", entryToDelete);
+            alert("Kein gültiger Eintrag zum Löschen ausgewählt.");
             return;
         }
         if (window.confirm("Diesen Eintrag wirklich löschen?")) {
@@ -445,37 +458,55 @@ const App = () => {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = '.json';
-        input.onchange = (e) => {
+        input.onchange = async (e) => {
             const file = (e.target as HTMLInputElement).files?.[0];
             if (file) {
                 if (!window.confirm("Achtung: Der Import überschreibt alle vorhandenen Daten. Fortfahren?")) return;
                 
-                const reader = new FileReader();
-                reader.onload = async (event) => {
-                    try {
-                        const data = JSON.parse(event.target?.result as string);
-                        if (!data.students || !data.entries) throw new Error("Invalid import file format.");
-                        
-                        await importData(data.students, data.entries);
-                        if(data.settings) handleSaveSettings(data.settings, true);
-                        
-                        await forceDataRefresh();
-                        
-                        // Reset selections and filters
-                        setSelectedStudent(null);
-                        setSelectedEntry(null);
-                        setFilters({ schoolYear: 'all', school: 'all', className: 'all', studentId: 'all' });
-                        setSearchQuery('');
-                        setGlobalDateFilter('');
-                        setStudentDateFilter(new Date().toISOString().split('T')[0]);
-
-                        alert("Daten erfolgreich importiert!");
-                    } catch (err) {
-                        console.error("Import failed:", err);
-                        alert(`Import fehlgeschlagen: ${(err as Error).message}`);
+                try {
+                    const text = await file.text();
+                    const data = JSON.parse(text);
+                    
+                    // ✅ Datenvalidierung
+                    if (!data.students || !Array.isArray(data.students) || 
+                        !data.entries || !Array.isArray(data.entries)) {
+                        throw new Error("Ungültiges Dateiformat: students oder entries fehlen");
                     }
-                };
-                reader.readAsText(file);
+    
+                    // ✅ IDs sicherstellen (könnten strings sein aus Export)
+                    const studentsWithNumericIds = data.students.map((s: any) => ({
+                        ...s,
+                        id: s.id ? Number(s.id) : undefined
+                    }));
+    
+                    const entriesWithNumericIds = data.entries.map((e: any) => ({
+                        ...e,
+                        id: e.id ? Number(e.id) : undefined,
+                        studentId: Number(e.studentId) // ✅ Wichtig: studentId muss number sein
+                    }));
+    
+                    await importData(studentsWithNumericIds, entriesWithNumericIds);
+                    
+                    // ✅ Settings nur importieren wenn vorhanden und gültig
+                    if (data.settings && typeof data.settings === 'object') {
+                        handleSaveSettings({ ...settings, ...data.settings }, true);
+                    }
+                    
+                    await forceDataRefresh();
+                    
+                    // Reset
+                    setSelectedStudent(null);
+                    setSelectedEntry(null);
+                    setFilters({ schoolYear: 'all', school: 'all', className: 'all', studentId: 'all' });
+                    setSearchQuery('');
+                    setGlobalDateFilter('');
+                    setStudentDateFilter(new Date().toISOString().split('T')[0]);
+    
+                    alert(`Daten erfolgreich importiert! (${studentsWithNumericIds.length} Kinder, ${entriesWithNumericIds.length} Einträge)`);
+                } catch (err) {
+                    console.error("Import failed:", err);
+                    alert(`Import fehlgeschlagen: ${(err as Error).message}`);
+                }
             }
         };
         input.click();

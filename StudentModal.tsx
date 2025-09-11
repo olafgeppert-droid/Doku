@@ -7,7 +7,7 @@ import { FAVORITE_NATIONALITIES, ALL_NATIONALITIES } from './nationalities';
 interface StudentModalProps {
     onClose: () => void;
     onSaveStudent: (student: Student | Omit<Student, 'id'>) => void;
-    onDeleteStudent: () => void; // No longer accepts a parameter
+    onDeleteStudent: (student: Student) => void;
     studentToEdit?: Student | null;
     masterData: MasterData;
 }
@@ -164,8 +164,9 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
                             <button 
                                 type="button" 
                                 className="btn btn-danger" 
-                                onClick={onDeleteStudent} // Simply call the prop
+                                onClick={() => studentToEdit && onDeleteStudent(studentToEdit)}
                                 style={{ marginRight: 'auto' }}
+                                disabled={!studentToEdit}
                             >
                                 🗑️ Löschen
                             </button>
