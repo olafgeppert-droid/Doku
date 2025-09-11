@@ -6,7 +6,7 @@ interface EntryModalProps {
     student: Student;
     onClose: () => void;
     onSaveEntry: (entryData: Omit<Entry, 'id' | 'studentId'>) => void;
-    onDeleteEntry: () => void;
+    onDeleteEntry: () => void; // No longer accepts a parameter
     entryToEdit: Entry | null;
 }
 
@@ -33,8 +33,7 @@ const EntryModal = ({ student, onClose, onSaveEntry, onDeleteEntry, entryToEdit 
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = () => {
         onSaveEntry(formData);
         onClose();
     };
@@ -43,7 +42,7 @@ const EntryModal = ({ student, onClose, onSaveEntry, onDeleteEntry, entryToEdit 
         <div className="modal-backdrop">
             <div className="modal-content" style={{maxWidth: '700px'}}>
                 <h2>{entryToEdit ? 'Eintrag bearbeiten' : `Neuer Eintrag für ${student.name}`}</h2>
-                <form onSubmit={handleSubmit}>
+                <div>
                     <div className="form-group"><label htmlFor="date">Datum</label><input id="date" name="date" type="date" value={formData.date} onChange={handleChange} required /></div>
                     <div className="form-group"><label htmlFor="subject">Fach / Thema</label><input id="subject" name="subject" type="text" value={formData.subject} onChange={handleChange} required /></div>
                     <div className="form-group"><label htmlFor="observations">Beobachtung</label><textarea id="observations" name="observations" value={formData.observations} onChange={handleChange}></textarea></div>
@@ -61,11 +60,20 @@ const EntryModal = ({ student, onClose, onSaveEntry, onDeleteEntry, entryToEdit 
                         </div>
                     </div>
                     <div className="modal-actions">
-                        {entryToEdit && <button type="button" className="btn btn-danger" onClick={onDeleteEntry} style={{ marginRight: 'auto' }}>🗑️ Löschen</button>}
+                        {entryToEdit && (
+                            <button 
+                                type="button" 
+                                className="btn btn-danger" 
+                                onClick={onDeleteEntry} // Simply call the prop
+                                style={{ marginRight: 'auto' }}
+                            >
+                                🗑️ Löschen
+                            </button>
+                        )}
                         <button type="button" className="btn btn-secondary" onClick={onClose}>❌ Abbrechen</button>
-                        <button type="submit" className="btn btn-primary">✔️ Eintrag speichern</button>
+                        <button type="button" className="btn btn-primary" onClick={handleSubmit}>✔️ Eintrag speichern</button>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     );

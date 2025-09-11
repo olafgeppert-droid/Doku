@@ -357,6 +357,31 @@ textarea { min-height: 80px; }
 }
 .backdrop { display: none; }
 
+.app-error-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    color: var(--text-color);
+}
+
+.app-error-overlay .modal-content {
+    max-width: 600px;
+    text-align: center;
+}
+
+.app-error-overlay p {
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+
 @media (max-width: 1024px) {
     .app {
         grid-template-columns: 1fr;
@@ -395,7 +420,7 @@ textarea { min-height: 80px; }
 }
 
 @media print {
-    .toolbar, .navigation, .modal-backdrop, .hamburger-menu, .backdrop, .header-date { display: none; }
+    .toolbar, .navigation, .modal-backdrop, .hamburger-menu, .backdrop, .header-date, .app-error-overlay { display: none; }
     .app { display: block; }
     .main-content { overflow: visible; }
     .entry-card { page-break-inside: avoid; }

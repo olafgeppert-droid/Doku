@@ -3,9 +3,12 @@ import React from 'react';
 
 interface HelpModalProps {
     onClose: () => void;
+    onLoadSampleData: () => void;
+    onClearAllData: () => void;
+    onDownloadSampleData: () => void;
 }
 
-const HelpModal = ({ onClose }: HelpModalProps) => {
+const HelpModal = ({ onClose, onLoadSampleData, onClearAllData, onDownloadSampleData }: HelpModalProps) => {
     return (
         <div className="modal-backdrop">
             <div className="modal-content" style={{maxWidth: '800px', textAlign: 'left'}}>
@@ -57,6 +60,20 @@ const HelpModal = ({ onClose }: HelpModalProps) => {
                         <li><strong>Schriftgröße:</strong> Passen Sie die Schriftgröße mit dem Schieberegler an Ihre Lesegewohnheiten an.</li>
                     </ul>
                     <p>Ihre Einstellungen werden automatisch im Browser gespeichert.</p>
+
+                    <h3 style={{marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem'}}>Daten zurücksetzen & Testen</h3>
+                    <p>Die folgenden Aktionen sind nützlich, um die Anwendung zu testen oder komplett neu zu beginnen. <strong>Achtung: Diese Aktionen können nicht rückgängig gemacht werden.</strong></p>
+                     <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+                        <button type="button" className="btn btn-primary" onClick={onLoadSampleData}>
+                           📊 Beispieldatensatz laden
+                        </button>
+                        <button type="button" className="btn btn-secondary" onClick={onDownloadSampleData}>
+                           💾 Beispieldaten herunterladen
+                        </button>
+                        <button type="button" className="btn btn-danger" onClick={onClearAllData}>
+                           🗑️ Alle Daten löschen
+                        </button>
+                    </div>
                 </div>
                 <div className="modal-actions">
                     <button type="button" className="btn btn-primary" onClick={onClose}>✔️ Schließen</button>

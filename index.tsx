@@ -12,6 +12,7 @@ import StudentModal from './StudentModal';
 import EntryModal from './EntryModal';
 import SettingsModal from './SettingsModal';
 import HelpModal from './HelpModal';
+import StatisticsModal from './StatisticsModal';
 
 // Import types and DB functions
 import type { Student, Entry, Settings } from './types';
@@ -25,7 +26,10 @@ import {
     getAllEntriesFromDB,
     updateStudentInDB,
     deleteStudentFromDB,
+    importData,
+    clearAllData as clearAllDataFromDB,
 } from './database';
+import { sampleStudents, sampleEntries, sampleMasterData } from './sample-data';
 
 // --- DEFAULT SETTINGS ---
 const DEFAULT_SETTINGS: Settings = {
@@ -39,10 +43,10 @@ const DEFAULT_SETTINGS: Settings = {
         entryBackground: '#ffffff',
     },
     masterData: {
-        schoolYears: ['2023/2024', '2024/2025', '2025/2026'],
+        schoolYears: ['2024/2025', '2025/2026', '2026/2027'],
         schools: {
-            'Grundschule am Park': ['1a', '1b', '2a', '2b', '3a', '3b', '4a', '4b'],
-            'Goethe-Gesamtschule': ['5c', '6a', '7b', '8d', '9a', '10c'],
+            'Heinz-Sielmann-Schule, Grundschule Neustadt an der Weinstraße': [],
+            'Ostschule, Grundschule Neustadt an der Weinstraße': [],
         }
     }
 };
@@ -57,6 +61,7 @@ const App = () => {
     const [students, setStudents] = useState<Student[]>([]);
     const [allEntries, setAllEntries] = useState<Entry[]>([]);
     const [version, setVersion] = useState('');
+    const [dbError, setDbError] = useState<string | null>(null);
 
     // History state
     const [history, setHistory] = useState<HistoryState[]>([]);
@@ -73,6 +78,7 @@ const App = () => {
     const [entryToEdit, setEntryToEdit] = useState<Entry | null>(null);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+    const [isStatisticsModalOpen, setIsStatisticsModalOpen] = useState(false);
     const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
     const [isNavVisible, setIsNavVisible] = useState(false); // State for mobile navigation
 
@@ -85,15 +91,13 @@ const App = () => {
     // --- DATABASE & DATA LOADING ---
     useEffect(() => {
         initDB().then(async () => {
+            console.log("DB Initialized successfully.");
             loadSettings();
-            const initialStudents = await getStudentsFromDB();
-            const initialEntries = await getAllEntriesFromDB();
-            
-            // Set initial history state, which will trigger the useEffect to set component state
-            setHistory([{ students: initialStudents, allEntries: initialEntries }]);
-            setHistoryIndex(0);
-
-        }).catch(err => console.error("DB initialization failed:", err));
+            await forceDataRefresh(true); // Initial data load
+        }).catch(err => {
+            console.error("Fatal DB initialization failed:", err);
+            setDbError("Die Datenbank konnte nicht initialisiert werden. Dies kann passieren, wenn Sie im privaten Modus surfen, Cookies/Website-Daten blockiert sind oder der Speicherplatz voll ist. Bitte überprüfen Sie Ihre Browsereinstellungen und laden Sie die Seite neu.");
+        });
         
         fetch('./metadata.json')
             .then(res => res.json())
@@ -163,6 +167,51 @@ const App = () => {
         }
 
     }, [settings]);
+
+    // --- FILTERING LOGIC ---
+    const filterOptions = useMemo(() => {
+        const studentSchoolYears = students.map(s => s.schoolYear);
+        const studentSchools = students.map(s => s.school);
+
+        const masterSchoolYears = settings.masterData?.schoolYears || [];
+        const masterSchools = Object.keys(settings.masterData?.schools || {});
+
+        let classNames: string[] = [];
+        const selectedSchool = filters.school;
+
+        if (selectedSchool === 'all') {
+            // Get all unique class names from master data and students
+            const masterClasses = Object.values(settings.masterData?.schools || {}).flat();
+            const studentClasses = students.map(s => s.className).filter(Boolean);
+            classNames = [...new Set([...masterClasses, ...studentClasses])];
+        } else {
+            // Get classes for the selected school from master data
+            const masterClassesForSchool = settings.masterData?.schools?.[selectedSchool] || [];
+            
+            // Get classes for the selected school from students (in case of data inconsistency)
+            const studentClassesForSchool = students
+                .filter(s => s.school === selectedSchool && s.className)
+                .map(s => s.className);
+            
+            classNames = [...new Set([...masterClassesForSchool, ...studentClassesForSchool])];
+        }
+
+        return {
+            schoolYears: [...new Set([...masterSchoolYears, ...studentSchoolYears])].sort(),
+            schools: [...new Set([...masterSchools, ...studentSchools])].sort(),
+            classNames: classNames.sort(),
+        };
+    }, [students, settings.masterData, filters.school]);
+
+    // Auto-reset class filter when school changes and selected class is no longer valid
+    useEffect(() => {
+        if (filters.school !== 'all' && filters.className !== 'all') {
+            const validClasses = filterOptions.classNames;
+            if (!validClasses.includes(filters.className)) {
+                setFilters(prev => ({ ...prev, className: 'all' }));
+            }
+        }
+    }, [filters.school, filters.className, filterOptions.classNames]);
     
     // Auto-select student from filter
      useEffect(() => {
@@ -183,7 +232,6 @@ const App = () => {
         }
     }, [history, historyIndex]);
 
-    // --- FILTERING LOGIC ---
     const studentEntries = useMemo(() => {
         if (!selectedStudent?.id) return [];
         const entriesForStudent = allEntries.filter(e => e.studentId === selectedStudent.id);
@@ -205,24 +253,33 @@ const App = () => {
             .filter(s => filters.studentId === 'all' || String(s.id) === filters.studentId);
     }, [students, searchQuery, filters]);
 
-    const filterOptions = useMemo(() => {
-        return {
-            schoolYears: [...new Set(students.map(s => s.schoolYear))].sort(),
-            schools: [...new Set(students.map(s => s.school))].sort(),
-            classNames: [...new Set(students.map(s => s.className))].sort(),
-        };
-    }, [students]);
-
     // --- HISTORY & STATE MANAGEMENT ---
-    const pushNewStateToHistory = async () => {
-        const newStudents = await getStudentsFromDB();
-        const newAllEntries = await getAllEntriesFromDB();
-        const newState = { students: newStudents, allEntries: newAllEntries };
-
-        const newHistory = history.slice(0, historyIndex + 1);
-        newHistory.push(newState);
-        setHistory(newHistory);
-        setHistoryIndex(newHistory.length - 1);
+    const forceDataRefresh = async (isInitialLoad = false) => {
+        console.log("[App] Forcing data refresh from DB...");
+        try {
+            const freshStudents = await getStudentsFromDB();
+            const freshEntries = await getAllEntriesFromDB();
+            const newState = { students: freshStudents, allEntries: freshEntries };
+    
+            setStudents(freshStudents.sort((a, b) => a.name.localeCompare(b.name)));
+            setAllEntries(freshEntries);
+    
+            if (isInitialLoad) {
+                setHistory([newState]);
+                setHistoryIndex(0);
+            } else {
+                setHistory(prev => {
+                    const trimmed = prev.slice(0, historyIndex + 1);
+                    trimmed.push(newState);
+                    setHistoryIndex(trimmed.length - 1);
+                    return trimmed;
+                });
+            }
+            console.log("[App] Data refresh complete.");
+        } catch (error) {
+            console.error("Failed to refresh data from DB:", error);
+            alert("Ein Fehler ist beim Laden der Daten aufgetreten. Bitte laden Sie die Seite neu.");
+        }
     };
 
     const handleUndo = () => {
@@ -263,9 +320,10 @@ const App = () => {
             }
             setIsStudentModalOpen(false);
             setStudentToEdit(null);
-            await pushNewStateToHistory();
+            await forceDataRefresh();
         } catch (error) {
             console.error("Failed to save student:", error);
+            alert("Fehler beim Speichern des Kindes.");
         }
     };
     
@@ -277,19 +335,33 @@ const App = () => {
     };
 
     const handleDeleteStudent = async () => {
-        const studentToDelete = studentToEdit;
-        if (studentToDelete?.id && window.confirm(`"${studentToDelete.name}" und alle zugehörigen Einträge wirklich löschen?`)) {
+        const studentToDelete = studentToEdit; // Use the student from the state
+        if (!studentToDelete?.id) {
+            console.error("[App] Kein gültiger Student zum Löschen im State:", studentToDelete);
+            alert("Kein gültiges Kind zum Löschen ausgewählt. Aktion abgebrochen.");
+            return;
+        }
+        if (!window.confirm(`"${studentToDelete.name}" und alle zugehörigen Einträge wirklich löschen?`)) return;
+    
+        try {
+            console.log("[App] Lösche Student aus State:", studentToDelete);
             await deleteStudentFromDB(studentToDelete.id);
-            const studentIdToDelete = studentToDelete.id;
-
+            await forceDataRefresh();
+    
             setIsStudentModalOpen(false);
             setStudentToEdit(null);
-
-            setSelectedStudent(null);
-            if (String(studentIdToDelete) === filters.studentId) {
-                setFilters(prev => ({...prev, studentId: 'all' }));
+            
+            if (selectedStudent?.id === studentToDelete.id) {
+                setSelectedStudent(null);
             }
-            await pushNewStateToHistory();
+            
+            if (String(studentToDelete.id) === filters.studentId) {
+                setFilters(prev => ({ ...prev, studentId: 'all' }));
+            }
+             console.log("[App] Löschen abgeschlossen, DB neu geladen.");
+        } catch (error) {
+            console.error("Fehler beim Löschen des Kindes:", error);
+            alert("Fehler beim Löschen des Kindes. Bitte Konsole prüfen.");
         }
     };
 
@@ -314,9 +386,10 @@ const App = () => {
             }
             setEntryToEdit(null);
             setIsEntryModalOpen(false);
-            await pushNewStateToHistory();
+            await forceDataRefresh();
         } catch (error) {
             console.error("Failed to save entry:", error);
+            alert("Fehler beim Speichern des Eintrags.");
         }
     };
 
@@ -328,15 +401,25 @@ const App = () => {
     };
 
     const handleDeleteEntry = async () => {
-        const entryToDelete = entryToEdit;
-        if (entryToDelete?.id && window.confirm("Diesen Eintrag wirklich löschen?")) {
-            await deleteEntryFromDB(entryToDelete.id);
-            
-            setIsEntryModalOpen(false);
-            setEntryToEdit(null);
-
-            setSelectedEntry(null);
-            await pushNewStateToHistory();
+        const entryToDelete = entryToEdit; // Use the entry from the state
+        if (!entryToDelete?.id) {
+            console.error("[App] Kein gültiger Eintrag zum Löschen im State:", entryToDelete);
+            return;
+        }
+        if (window.confirm("Diesen Eintrag wirklich löschen?")) {
+            try {
+                await deleteEntryFromDB(entryToDelete.id);
+                await forceDataRefresh();
+    
+                setIsEntryModalOpen(false);
+                setEntryToEdit(null);
+                if (selectedEntry?.id === entryToDelete.id) {
+                    setSelectedEntry(null);
+                }
+            } catch (error) {
+                 console.error("Fehler beim Löschen des Eintrags:", error);
+                 alert("Fehler beim Löschen des Eintrags.");
+            }
         }
     };
 
@@ -373,9 +456,20 @@ const App = () => {
                         const data = JSON.parse(event.target?.result as string);
                         if (!data.students || !data.entries) throw new Error("Invalid import file format.");
                         
-                        alert("Import-Funktion ist konzeptionell, da ein sicheres Überschreiben der Datenbank komplex ist. In einer echten Anwendung würde hier eine Transaktion zum Leeren und Neubefüllen der Datenbank stattfinden.");
-                        if(data.settings) handleSaveSettings(data.settings);
+                        await importData(data.students, data.entries);
+                        if(data.settings) handleSaveSettings(data.settings, true);
                         
+                        await forceDataRefresh();
+                        
+                        // Reset selections and filters
+                        setSelectedStudent(null);
+                        setSelectedEntry(null);
+                        setFilters({ schoolYear: 'all', school: 'all', className: 'all', studentId: 'all' });
+                        setSearchQuery('');
+                        setGlobalDateFilter('');
+                        setStudentDateFilter(new Date().toISOString().split('T')[0]);
+
+                        alert("Daten erfolgreich importiert!");
                     } catch (err) {
                         console.error("Import failed:", err);
                         alert(`Import fehlgeschlagen: ${(err as Error).message}`);
@@ -385,6 +479,96 @@ const App = () => {
             }
         };
         input.click();
+    };
+    
+    const handleLoadSampleData = async () => {
+        if (!window.confirm("Achtung: Dadurch werden alle vorhandenen Daten gelöscht und durch Beispieldaten ersetzt. Fortfahren?")) return;
+        try {
+            await importData(sampleStudents, sampleEntries);
+            const newSettings = { ...settings, masterData: sampleMasterData };
+            handleSaveSettings(newSettings, true);
+            
+            await forceDataRefresh();
+            
+            // Reset selections and filters to show the new data
+            setSelectedStudent(null);
+            setSelectedEntry(null);
+            setFilters({ schoolYear: 'all', school: 'all', className: 'all', studentId: 'all' });
+            setSearchQuery('');
+            setGlobalDateFilter('');
+            setStudentDateFilter(new Date().toISOString().split('T')[0]);
+            
+            alert("Beispieldaten erfolgreich geladen.");
+            setIsHelpModalOpen(false);
+        } catch (error) {
+            console.error("Failed to load sample data:", error);
+            alert("Laden der Beispieldaten fehlgeschlagen.");
+        }
+    };
+    
+    const handleDownloadSampleData = async () => {
+        try {
+            const data = {
+                students: sampleStudents,
+                entries: sampleEntries,
+                settings: { ...DEFAULT_SETTINGS, masterData: sampleMasterData }
+            };
+            const fileName = 'Beispieldaten.json';
+            const jsonString = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            
+            const file = new File([blob], fileName, { type: 'application/json' });
+
+            // Use Web Share API if available (for mobile/iOS share sheet)
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: 'Beispieldaten',
+                    text: 'Pädagogische Dokumentation Beispieldaten.',
+                });
+            } else {
+                // Fallback for desktop browsers to trigger "Save As..."
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = fileName;
+                document.body.appendChild(link); // Required for Firefox
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
+        } catch (error) {
+            // Don't show an alert if the user cancels the share dialog
+            if ((error as Error).name !== 'AbortError') {
+                 console.error("Sample data download failed:", error);
+                 alert("Herunterladen der Beispieldaten fehlgeschlagen!");
+            }
+        }
+    };
+
+    const handleClearAllData = async () => {
+        if (!window.confirm("WARNUNG: Diese Aktion löscht ALLE Schüler und Protokolleinträge endgültig. Sind Sie absolut sicher?")) return;
+        if (!window.confirm("Letzte Warnung: Alle Daten werden gelöscht. Diese Aktion kann nicht rückgängig gemacht werden. Fortfahren?")) return;
+
+        try {
+            await clearAllDataFromDB();
+            
+            await forceDataRefresh();
+
+            // Reset selections and filters
+            setSelectedStudent(null);
+            setSelectedEntry(null);
+            setFilters({ schoolYear: 'all', school: 'all', className: 'all', studentId: 'all' });
+            setSearchQuery('');
+            setGlobalDateFilter('');
+            setStudentDateFilter(new Date().toISOString().split('T')[0]);
+            
+            alert("Alle Daten wurden erfolgreich gelöscht.");
+            setIsHelpModalOpen(false);
+        } catch (error) {
+            console.error("Failed to clear all data:", error);
+            alert("Löschen der Daten fehlgeschlagen.");
+        }
     };
 
     const loadSettings = () => {
@@ -404,14 +588,18 @@ const App = () => {
                 setSettings({ ...DEFAULT_SETTINGS, ...parsedSettings });
             } catch {
                 setSettings(DEFAULT_SETTINGS);
-            }
+}
+        } else {
+             setSettings(DEFAULT_SETTINGS);
         }
     };
 
-    const handleSaveSettings = (newSettings: Settings) => {
+    const handleSaveSettings = (newSettings: Settings, silent = false) => {
         setSettings(newSettings);
         localStorage.setItem('peda-protokoll-settings', JSON.stringify(newSettings));
-        setIsSettingsModalOpen(false);
+        if (!silent) {
+            setIsSettingsModalOpen(false);
+        }
     };
 
     const studentNameMap = useMemo(() => {
@@ -419,6 +607,20 @@ const App = () => {
     }, [students]);
 
     const studentForModal = entryToEdit ? students.find(s => s.id === entryToEdit.studentId) : selectedStudent;
+
+    if (dbError) {
+        return (
+            <div className="app-error-overlay">
+                <div className="modal-content">
+                    <h2>Anwendungsfehler</h2>
+                    <p>{dbError}</p>
+                    <button className="btn btn-primary" onClick={() => window.location.reload()}>
+                        Seite neu laden
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="app">
@@ -451,6 +653,7 @@ const App = () => {
                 onGlobalDateChange={handleGlobalDateChange}
                 studentOptions={students}
                 onOpenSettings={() => setIsSettingsModalOpen(true)}
+                onOpenStatistics={() => setIsStatisticsModalOpen(true)}
                 onOpenHelp={() => setIsHelpModalOpen(true)}
                 isNavVisible={isNavVisible}
                 onClose={() => setIsNavVisible(false)}
@@ -479,6 +682,7 @@ const App = () => {
                     <div className="no-entries">
                         <h2>Willkommen!</h2>
                         <p>Wählen Sie links ein Kind aus der Liste, um die Protokolle anzuzeigen, oder wählen Sie einen Tag, um alle Einträge für diesen Tag zu sehen.</p>
+                        <p>Falls Sie die App zum ersten Mal verwenden, können Sie unter "Hilfe" Beispieldaten laden.</p>
                     </div>
                 )}
             </main>
@@ -510,7 +714,19 @@ const App = () => {
                 />
             )}
             {isHelpModalOpen && (
-                <HelpModal onClose={() => setIsHelpModalOpen(false)} />
+                <HelpModal 
+                    onClose={() => setIsHelpModalOpen(false)} 
+                    onLoadSampleData={handleLoadSampleData}
+                    onClearAllData={handleClearAllData}
+                    onDownloadSampleData={handleDownloadSampleData}
+                />
+            )}
+            {isStatisticsModalOpen && (
+                <StatisticsModal 
+                    onClose={() => setIsStatisticsModalOpen(false)} 
+                    students={students}
+                    allEntries={allEntries}
+                />
             )}
         </div>
     );

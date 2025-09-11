@@ -9,6 +9,7 @@ export interface Student {
   gender?: string;
   nationality?: string;
   germanLevel?: string;
+  notes?: string;
 }
 
 export interface Entry {

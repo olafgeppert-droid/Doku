@@ -33,6 +33,11 @@ const StudentDetails = ({ student, entries, selectedEntry, onSelectEntry, dateFi
                     {student.nationality && <span><strong>Nationalität:</strong> {student.nationality}</span>}
                     {student.germanLevel && <span><strong>Deutsch-Niveau (Note):</strong> {student.germanLevel}</span>}
                 </div>
+                 {student.notes && (
+                    <div className="entry-card" style={{ marginBottom: '1rem', cursor: 'default' }}>
+                        <p><strong>Anmerkungen:</strong> {student.notes.split('\n').map((line, i) => <React.Fragment key={i}>{line}<br/></React.Fragment>)}</p>
+                    </div>
+                )}
                 <div className="date-filter">
                     <label htmlFor="dateFilter">Einträge filtern nach Tag:</label>
                     <div className="date-filter-wrapper">

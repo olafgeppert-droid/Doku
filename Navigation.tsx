@@ -13,6 +13,7 @@ interface NavigationProps {
     onGlobalDateChange: (date: string) => void;
     studentOptions: Student[];
     onOpenSettings: () => void;
+    onOpenStatistics: () => void;
     onOpenHelp: () => void;
     isNavVisible: boolean;
     onClose: () => void;
@@ -30,7 +31,8 @@ const Navigation = ({
     globalDateFilter, 
     onGlobalDateChange, 
     studentOptions, 
-    onOpenSettings, 
+    onOpenSettings,
+    onOpenStatistics, 
     onOpenHelp,
     isNavVisible,
     onClose,
@@ -104,6 +106,7 @@ const Navigation = ({
             <div className="navigation-footer">
                 <hr className="navigation-divider" />
                 <div className="navigation-actions">
+                    <button className="btn btn-secondary" onClick={onOpenStatistics}>📊 Statistiken</button>
                     <button className="btn btn-secondary" onClick={onOpenSettings}>⚙️ Einstellungen</button>
                     <button className="btn btn-secondary" onClick={onOpenHelp}>❓ Hilfe</button>
                 </div>

@@ -1,5 +1,5 @@
 {
-  "name": "pädagogische-dokumentation_v1.2.3",
+  "name": "pädagogische-dokumentation_v1.5.1_es-klappt-nicht",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "idb": "^8.0.3"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
