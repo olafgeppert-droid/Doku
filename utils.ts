@@ -3,10 +3,10 @@
 /**
  * Capitalizes the first letter of each word in a string.
  * e.g., "hans meiser" becomes "Hans Meiser".
- * @param str The input string.
- * @returns The capitalized string.
+ * @param {string} str The input string.
+ * @returns {string} The capitalized string.
  */
-export const capitalizeWords = (str: string): string => {
+export const capitalizeWords = (str) => {
   if (!str) return '';
   return str
     .split(' ')
