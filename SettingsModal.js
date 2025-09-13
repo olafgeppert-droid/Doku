@@ -51,59 +51,59 @@ const SettingsModal = ({ onClose, onSave, currentSettings, version }: SettingsMo
             <div className="modal-content">
                 <h2>Einstellungen</h2>
 
+                {/* Farbschema */}
                 <div className="settings-group">
                     <h3>Farbschema</h3>
                     <div className="theme-options">
                         <label>
-                            <input type="radio" name="theme" value="default" checked={settings.theme === 'default'} onChange={handleThemeChange} />
-                            Standard (Hell)
+                            <input type="radio" name="theme" value="default" checked={settings.theme === 'default'} onChange={handleThemeChange} /> Standard (Hell)
                         </label>
                         <label>
-                            <input type="radio" name="theme" value="dark" checked={settings.theme === 'dark'} onChange={handleThemeChange} />
-                            Dunkel
+                            <input type="radio" name="theme" value="dark" checked={settings.theme === 'dark'} onChange={handleThemeChange} /> Dunkel
                         </label>
                         <label>
-                            <input type="radio" name="theme" value="high-contrast" checked={settings.theme === 'high-contrast'} onChange={handleThemeChange} />
-                            Hoher Kontrast
+                            <input type="radio" name="theme" value="high-contrast" checked={settings.theme === 'high-contrast'} onChange={handleThemeChange} /> Hoher Kontrast
                         </label>
                         <label>
-                            <input type="radio" name="theme" value="custom" checked={settings.theme === 'custom'} onChange={handleThemeChange} />
-                            Farbig (Benutzerdefiniert)
+                            <input type="radio" name="theme" value="custom" checked={settings.theme === 'custom'} onChange={handleThemeChange} /> Farbig (Benutzerdefiniert)
                         </label>
                     </div>
 
                     {settings.theme === 'custom' && (
                         <div className="custom-colors">
-                            {['sidebar', 'header', 'toolbar', 'entryBackground'].map(colorKey => (
-                                <div key={colorKey} className="custom-color-option">
-                                    <label htmlFor={colorKey}>{colorKey === 'entryBackground' ? 'Protokoll-Hintergrund' : colorKey.charAt(0).toUpperCase() + colorKey.slice(1)}</label>
-                                    <input type="color" id={colorKey} name={colorKey} value={settings.customColors[colorKey]} onChange={handleCustomColorChange} />
+                            {['sidebar', 'header', 'toolbar', 'entryBackground'].map(key => (
+                                <div key={key} className="custom-color-option">
+                                    <label htmlFor={key}>{key.charAt(0).toUpperCase() + key.slice(1)}</label>
+                                    <input type="color" id={key} name={key} value={settings.customColors[key]} onChange={handleCustomColorChange} />
                                 </div>
                             ))}
                         </div>
                     )}
                 </div>
 
+                {/* Schriftgröße Labels */}
                 <div className="settings-group">
                     <h3>Schriftgröße Labels</h3>
                     <div className="font-size-slider">
                         <span>A</span>
-                        <input type="range" min="12" max="35" step="1" value={settings.fontSize} onChange={handleFontSizeChange} aria-label="Schriftgröße" />
+                        <input type="range" min="12" max="35" step="1" value={settings.fontSize} onChange={handleFontSizeChange} />
                         <span>A</span>
                         <span>{settings.fontSize}px</span>
                     </div>
                 </div>
 
+                {/* Schriftgröße Eingabefelder */}
                 <div className="settings-group">
                     <h3>Schriftgröße Eingabefelder</h3>
                     <div className="font-size-slider">
                         <span>A</span>
-                        <input type="range" min="10" max="30" step="1" value={settings.inputFontSize ?? 16} onChange={handleInputFontSizeChange} aria-label="Schriftgröße für Eingabefelder" />
+                        <input type="range" min="10" max="30" step="1" value={settings.inputFontSize ?? 16} onChange={handleInputFontSizeChange} />
                         <span>A</span>
                         <span>{settings.inputFontSize ?? 16}px</span>
                     </div>
                 </div>
 
+                {/* Stammdaten */}
                 <div className="settings-group">
                     <h3>Stammdaten</h3>
                     <button type="button" className="btn btn-secondary" onClick={() => setIsMasterDataModalOpen(true)}>
@@ -111,14 +111,13 @@ const SettingsModal = ({ onClose, onSave, currentSettings, version }: SettingsMo
                     </button>
                 </div>
 
+                {/* Buttons */}
                 <div className="modal-actions">
                     <button type="button" className="btn btn-secondary" onClick={onClose}>❌ Abbrechen</button>
                     <button type="button" className="btn btn-primary" onClick={handleSave}>✔️ Übernehmen</button>
                 </div>
 
-                <div className="settings-footer">
-                    Version {version}
-                </div>
+                <div className="settings-footer">Version {version}</div>
             </div>
 
             {isMasterDataModalOpen && (
