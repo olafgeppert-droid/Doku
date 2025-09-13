@@ -6,14 +6,14 @@ import { createRoot } from 'react-dom/client';
 import Header from './Header.jsx';
 import Navigation from './Navigation.jsx';
 import Toolbar from './components/Toolbar.jsx';
-import StudentDetails from './StudentDetails.jsx';
-import DayDetails from './DayDetails.jsx';
-import StudentModal from './StudentModal.jsx';
-import EntryModal from './EntryModal.jsx';
-import SettingsModal from './SettingsModal.jsx';
-import HelpModal from './HelpModal.jsx';
-import StatisticsModal from './StatisticsModal.jsx';
-import MasterDataModal from './MasterDataModal.jsx';
+import StudentDetails from './components/StudentDetails.jsx';
+import DayDetails from './components/DayDetails.jsx';
+import StudentModal from './components/StudentModal.jsx';
+import EntryModal from './components/EntryModal.jsx';
+import SettingsModal from './components/SettingsModal.jsx';
+import HelpModal from './components/HelpModal.jsx';
+import StatisticsModal from './components/StatisticsModal.jsx';
+import MasterDataModal from './components/MasterDataModal.jsx';
 
 // --- Database ---
 import {
