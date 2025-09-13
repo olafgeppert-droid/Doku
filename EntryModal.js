@@ -36,7 +36,7 @@ const EntryModal = ({ student, onClose, onSaveEntry, onDeleteEntry, entryToEdit 
 
     return (
         <div className="modal-backdrop">
-            <div className="modal-content" style={{ maxWidth: '700px' }}>
+            <div className="modal-content" style={{maxWidth: '700px'}}>
                 <h2>{entryToEdit ? 'Eintrag bearbeiten' : `Neuer Eintrag für ${student.name}`}</h2>
                 <div>
                     <div className="form-group">
