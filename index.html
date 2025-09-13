@@ -23,6 +23,18 @@
 <body>
   <noscript>You need to enable JavaScript to run this app.</noscript>
   <div id="root"></div>
-  <script type="module" src="./index.tsx"></script>
+  <!-- importmap (belassen wie du sie hast) -->
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/"
+    /* ... deine restlichen Einträge ... */
+  }
+}
+</script>
+
+<!-- statt direkt .tsx laden wir jetzt das transpiliere JS in /dist -->
+<script type="module" src="./dist/index.js"></script>
 </body>
 </html>
