@@ -25,6 +25,7 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
     });
     const [validationError, setValidationError] = useState('');
 
+    // Initialisiere Formulardaten, wenn ein Student editiert wird
     useEffect(() => {
         if (studentToEdit) {
             setFormData({
@@ -43,12 +44,14 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         if (name === 'school') {
-            setFormData(prev => ({...prev, school: value, className: ''}));
+            // Wenn die Schule gewechselt wird, Klasse zurücksetzen
+            setFormData(prev => ({ ...prev, school: value, className: '' }));
         } else {
-            setFormData(prev => ({...prev, [name]: value}));
+            setFormData(prev => ({ ...prev, [name]: value }));
         }
-    }
-    
+    };
+
+    // Optionen für Klassen basierend auf gewählter Schule
     const classOptions = useMemo(() => {
         if (!formData.school || !masterData.schools[formData.school]) return [];
         return masterData.schools[formData.school];
@@ -68,7 +71,10 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
         }
 
         setValidationError('');
-        const formattedData = { ...formData, name: capitalizeWords(name.trim()) };
+        const formattedData = {
+            ...formData,
+            name: capitalizeWords(name.trim()),
+        };
         
         if (studentToEdit) {
             onSaveStudent({ ...formattedData, id: studentToEdit.id });
@@ -82,10 +88,12 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
             <div className="modal-content">
                 <h2>{studentToEdit ? 'Kind bearbeiten' : 'Neues Kind anlegen'}</h2>
                 <div>
+                    {/* Formularfelder */}
                     <div className="form-group">
                         <label htmlFor="name">Name des Kindes *</label>
                         <input id="name" name="name" type="text" value={formData.name} onChange={handleChange} autoFocus />
                     </div>
+
                     <div className="form-group">
                         <label htmlFor="schoolYear">Schuljahr *</label>
                         <select id="schoolYear" name="schoolYear" value={formData.schoolYear} onChange={handleChange}>
@@ -93,6 +101,7 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
                             {masterData.schoolYears.map(year => <option key={year} value={year}>{year}</option>)}
                         </select>
                     </div>
+
                     <div className="form-group">
                         <label htmlFor="school">Schule *</label>
                         <select id="school" name="school" value={formData.school} onChange={handleChange}>
@@ -100,6 +109,7 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
                             {Object.keys(masterData.schools).sort().map(school => <option key={school} value={school}>{school}</option>)}
                         </select>
                     </div>
+
                     <div className="form-group">
                         <label htmlFor="className">Klasse</label>
                         <select id="className" name="className" value={formData.className} onChange={handleChange} disabled={!formData.school}>
@@ -107,6 +117,7 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
                             {classOptions.map(cls => <option key={cls} value={cls}>{cls}</option>)}
                         </select>
                     </div>
+
                     <div className="form-group">
                         <label htmlFor="gender">Geschlecht *</label>
                         <select id="gender" name="gender" value={formData.gender} onChange={handleChange}>
@@ -116,22 +127,20 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
                             <option value="divers">Divers</option>
                         </select>
                     </div>
+
                     <div className="form-group">
                         <label htmlFor="nationality">Nationalität</label>
                         <select id="nationality" name="nationality" value={formData.nationality} onChange={handleChange}>
                             <option value="">Keine Angabe</option>
                             <optgroup label="Favoriten">
-                                {FAVORITE_NATIONALITIES.map(nation => (
-                                    <option key={nation} value={nation}>{nation}</option>
-                                ))}
+                                {FAVORITE_NATIONALITIES.map(nation => <option key={nation} value={nation}>{nation}</option>)}
                             </optgroup>
                             <optgroup label="Alle Nationen">
-                                {ALL_NATIONALITIES.filter(nation => !FAVORITE_NATIONALITIES.includes(nation)).map(nation => (
-                                    <option key={nation} value={nation}>{nation}</option>
-                                ))}
+                                {ALL_NATIONALITIES.filter(n => !FAVORITE_NATIONALITIES.includes(n)).map(n => <option key={n} value={n}>{n}</option>)}
                             </optgroup>
                         </select>
                     </div>
+
                     <div className="form-group">
                         <label htmlFor="germanLevel">Spricht Deutsch (Schulnote)</label>
                         <select id="germanLevel" name="germanLevel" value={formData.germanLevel} onChange={handleChange}>
@@ -144,13 +153,14 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
                             <option value="6">6 (Ungenügend)</option>
                         </select>
                     </div>
+
                     <div className="form-group">
                         <label htmlFor="notes">Anmerkungen</label>
                         <textarea id="notes" name="notes" value={formData.notes} onChange={handleChange}></textarea>
                     </div>
 
                     {validationError && <p className="validation-error">{validationError}</p>}
-                    
+
                     <div className="modal-actions">
                         {studentToEdit && (
                             <button 
@@ -158,6 +168,7 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
                                 className="btn btn-danger" 
                                 onClick={() => studentToEdit && onDeleteStudent(studentToEdit)}
                                 style={{ marginRight: 'auto' }}
+                                disabled={!studentToEdit}
                             >
                                 🗑️ Löschen
                             </button>
