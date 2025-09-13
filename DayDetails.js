@@ -31,13 +31,13 @@ const DayDetails = ({ date, entries, selectedEntry, onSelectEntry, studentNameMa
                 </div>
             ) : (
                 entries.map(entry => (
-                    <div 
-                        key={entry.id} 
-                        className={`entry-card ${selectedEntry?.id === entry.id ? 'selected' : ''}`} 
+                    <div
+                        key={entry.id}
+                        className={`entry-card ${selectedEntry?.id === entry.id ? 'selected' : ''}`}
                         onClick={() => onSelectEntry(entry)}
                     >
                         <div className="entry-card-header">
-                            <span className="subject">{studentNameMap.get(entry.studentId)} - {entry.subject}</span>
+                            <span className="subject">{studentNameMap.get(entry.studentId) || 'Unbekannt'} - {entry.subject}</span>
                         </div>
                         <div className="entry-content">
                             {entry.observations && <p><strong>Beobachtung:</strong> {entry.observations}</p>}
