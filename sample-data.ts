@@ -1,5 +1,4 @@
 /** @jsxImportSource react */
-import type { Student, Entry, MasterData } from './types';
 
 export const sampleMasterData: MasterData = {
     schoolYears: ['2024/2025', '2025/2026'],
