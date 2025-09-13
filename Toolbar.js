@@ -1,24 +1,23 @@
 /** @jsxImportSource react */
 import React from 'react';
 
-/**
- * Toolbar component
- * @param {Object} props
- * @param {() => void} props.onNewStudent
- * @param {() => void} props.onManageStudent
- * @param {() => void} props.onNewEntry
- * @param {() => void} props.onManageEntry
- * @param {boolean} props.canManageStudent
- * @param {boolean} props.canAddEntry
- * @param {boolean} props.canManageEntry
- * @param {() => void} props.onPrint
- * @param {() => void} props.onExport
- * @param {() => void} props.onImport
- * @param {() => void} props.onUndo
- * @param {() => void} props.onRedo
- * @param {boolean} props.canUndo
- * @param {boolean} props.canRedo
- */
+interface ToolbarProps {
+    onNewStudent: () => void;
+    onManageStudent: () => void;
+    onNewEntry: () => void;
+    onManageEntry: () => void;
+    canManageStudent: boolean;
+    canAddEntry: boolean;
+    canManageEntry: boolean;
+    onPrint: () => void;
+    onExport: () => void;
+    onImport: () => void;
+    onUndo: () => void;
+    onRedo: () => void;
+    canUndo: boolean;
+    canRedo: boolean;
+}
+
 const Toolbar = ({
     onNewStudent,
     onManageStudent,
@@ -34,7 +33,7 @@ const Toolbar = ({
     onRedo,
     canUndo,
     canRedo,
-}) => (
+}: ToolbarProps) => (
     <div className="toolbar">
         <div className="toolbar-row">
             <button className="btn btn-primary" onClick={onNewStudent}>➕ Kind anlegen</button>
