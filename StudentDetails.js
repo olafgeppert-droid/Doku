@@ -1,29 +1,25 @@
 /** @jsxImportSource react */
 import React from 'react';
+import type { Student, Entry } from './types';
 
-/**
- * StudentDetails component
- * @param {Object} props
- * @param {Object} props.student
- * @param {Array<Object>} props.entries
- * @param {Object|null} props.selectedEntry
- * @param {(entry: Object) => void} props.onSelectEntry
- * @param {string} props.dateFilter
- * @param {(date: string) => void} props.onDateFilterChange
- */
-const StudentDetails = ({ student, entries, selectedEntry, onSelectEntry, dateFilter, onDateFilterChange }) => {
+interface StudentDetailsProps {
+    student: Student;
+    entries: Entry[];
+    selectedEntry: Entry | null;
+    onSelectEntry: (entry: Entry) => void;
+    dateFilter: string;
+    onDateFilterChange: (date: string) => void;
+}
 
-    const getErfolgRatingText = (rating) => {
+const StudentDetails = ({ student, entries, selectedEntry, onSelectEntry, dateFilter, onDateFilterChange }: StudentDetailsProps) => {
+    
+    const getErfolgRatingText = (rating: Entry['erfolgRating']) => {
         if (rating === 'positiv') return ' (Positiv)';
         if (rating === 'negativ') return ' (Negativ)';
         return '';
-    };
-
+    }
+    
     const today = new Date().toISOString().split('T')[0];
-
-    const filteredEntries = dateFilter
-        ? entries.filter(entry => entry.date === dateFilter)
-        : entries;
 
     return (
         <div>
@@ -44,12 +40,7 @@ const StudentDetails = ({ student, entries, selectedEntry, onSelectEntry, dateFi
                 <div className="date-filter">
                     <label htmlFor="dateFilter">Einträge filtern nach Tag:</label>
                     <div className="date-filter-wrapper">
-                        <input
-                            id="dateFilter"
-                            type="date"
-                            value={dateFilter}
-                            onChange={e => onDateFilterChange(e.target.value)}
-                        />
+                        <input id="dateFilter" type="date" value={dateFilter} onChange={e => onDateFilterChange(e.target.value)} />
                         <button
                             onClick={() => onDateFilterChange(today)}
                             className="btn-clear"
@@ -69,19 +60,14 @@ const StudentDetails = ({ student, entries, selectedEntry, onSelectEntry, dateFi
                     </div>
                 </div>
             </div>
-
-            {filteredEntries.length === 0 ? (
+            {entries.length === 0 ? (
                 <div className="no-entries">
                     <h3>Keine Einträge für dieses Datum</h3>
                     <p>Fügen Sie einen neuen Eintrag hinzu oder ändern Sie den Datumsfilter.</p>
                 </div>
             ) : (
-                filteredEntries.map(entry => (
-                    <div
-                        key={entry.id ?? Math.random()} // fallback key, falls id fehlt
-                        className={`entry-card ${selectedEntry?.id === entry.id ? 'selected' : ''}`}
-                        onClick={() => onSelectEntry(entry)}
-                    >
+                entries.map(entry => (
+                    <div key={entry.id} className={`entry-card ${selectedEntry?.id === entry.id ? 'selected' : ''}`} onClick={() => onSelectEntry(entry)}>
                         <div className="entry-card-header">
                             <span className="subject">{entry.subject}</span>
                             <span>{new Date(entry.date).toLocaleDateString('de-DE', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
