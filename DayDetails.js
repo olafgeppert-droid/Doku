@@ -31,9 +31,9 @@ const DayDetails = ({ date, entries, selectedEntry, onSelectEntry, studentNameMa
                 </div>
             ) : (
                 entries.map(entry => (
-                    <div
-                        key={entry.id}
-                        className={`entry-card ${selectedEntry?.id === entry.id ? 'selected' : ''}`}
+                    <div 
+                        key={entry.id} 
+                        className={`entry-card ${selectedEntry?.id === entry.id ? 'selected' : ''}`} 
                         onClick={() => onSelectEntry(entry)}
                     >
                         <div className="entry-card-header">
