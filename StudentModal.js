@@ -1,18 +1,18 @@
 /** @jsxImportSource react */
 import React, { useState, useEffect, useMemo } from 'react';
+import type { Student, MasterData } from './types';
 import { capitalizeWords } from './utils';
 import { FAVORITE_NATIONALITIES, ALL_NATIONALITIES } from './nationalities';
 
-/**
- * StudentModal component
- * @param {Object} props
- * @param {() => void} props.onClose
- * @param {(student: Object) => void} props.onSaveStudent
- * @param {(student: Object) => void} props.onDeleteStudent
- * @param {Object|null} props.studentToEdit
- * @param {Object} props.masterData
- */
-const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, masterData }) => {
+interface StudentModalProps {
+    onClose: () => void;
+    onSaveStudent: (student: Student | Omit<Student, 'id'>) => void;
+    onDeleteStudent: (student: Student) => void;
+    studentToEdit?: Student | null;
+    masterData: MasterData;
+}
+
+const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, masterData }: StudentModalProps) => {
     const [formData, setFormData] = useState({ 
         name: '', 
         schoolYear: '', 
@@ -40,23 +40,25 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
         }
     }, [studentToEdit]);
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         if (name === 'school') {
             setFormData(prev => ({...prev, school: value, className: ''}));
         } else {
             setFormData(prev => ({...prev, [name]: value}));
         }
-    };
+    }
     
     const classOptions = useMemo(() => {
-        if (!formData.school || !masterData.schools[formData.school]) return [];
+        if (!formData.school || !masterData.schools[formData.school]) {
+            return [];
+        }
         return masterData.schools[formData.school];
     }, [formData.school, masterData.schools]);
 
     const handleSubmit = () => {
         const { name, schoolYear, school, gender } = formData;
-        const errors = [];
+        const errors: string[] = [];
         if (!name.trim()) errors.push('Name');
         if (!schoolYear) errors.push('Schuljahr');
         if (!school) errors.push('Schule');
@@ -85,7 +87,6 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
             <div className="modal-content">
                 <h2>{studentToEdit ? 'Kind bearbeiten' : 'Neues Kind anlegen'}</h2>
                 <div>
-                    {/* Form fields */}
                     <div className="form-group">
                         <label htmlFor="name">Name des Kindes *</label>
                         <input id="name" name="name" type="text" value={formData.name} onChange={handleChange} autoFocus />
@@ -125,11 +126,16 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
                         <select id="nationality" name="nationality" value={formData.nationality} onChange={handleChange}>
                             <option value="">Keine Angabe</option>
                             <optgroup label="Favoriten">
-                                {FAVORITE_NATIONALITIES.map(nation => <option key={nation} value={nation}>{nation}</option>)}
+                                {FAVORITE_NATIONALITIES.map(nation => (
+                                    <option key={nation} value={nation}>{nation}</option>
+                                ))}
                             </optgroup>
                             <optgroup label="Alle Nationen">
-                                {ALL_NATIONALITIES.filter(nation => !FAVORITE_NATIONALITIES.includes(nation))
-                                    .map(nation => <option key={nation} value={nation}>{nation}</option>)}
+                                {ALL_NATIONALITIES
+                                    .filter(nation => !FAVORITE_NATIONALITIES.includes(nation))
+                                    .map(nation => (
+                                        <option key={nation} value={nation}>{nation}</option>
+                                    ))}
                             </optgroup>
                         </select>
                     </div>
@@ -159,6 +165,7 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
                                 className="btn btn-danger" 
                                 onClick={() => studentToEdit && onDeleteStudent(studentToEdit)}
                                 style={{ marginRight: 'auto' }}
+                                disabled={!studentToEdit}
                             >
                                 🗑️ Löschen
                             </button>
