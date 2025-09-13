@@ -54,7 +54,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./out
-          name: github-pages-${{ github.run_id }}
+          name: github-pages  # <-- genau so, ohne suffix
 
       # 6. Deployment
       - name: Deploy to GitHub Pages
