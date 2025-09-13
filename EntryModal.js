@@ -63,13 +63,16 @@ const EntryModal = ({ student, onClose, onSaveEntry, onDeleteEntry, entryToEdit 
                         <label>Bewertung des Erfolgs</label>
                         <div className="radio-options">
                             <label>
-                                <input type="radio" name="erfolgRating" value="positiv" checked={formData.erfolgRating === 'positiv'} onChange={handleChange} /> Positiv
+                                <input type="radio" name="erfolgRating" value="positiv" checked={formData.erfolgRating === 'positiv'} onChange={handleChange} />
+                                Positiv
                             </label>
                             <label>
-                                <input type="radio" name="erfolgRating" value="negativ" checked={formData.erfolgRating === 'negativ'} onChange={handleChange} /> Negativ
+                                <input type="radio" name="erfolgRating" value="negativ" checked={formData.erfolgRating === 'negativ'} onChange={handleChange} />
+                                Negativ
                             </label>
                             <label>
-                                <input type="radio" name="erfolgRating" value="" checked={formData.erfolgRating === ''} onChange={handleChange} /> Keine
+                                <input type="radio" name="erfolgRating" value="" checked={formData.erfolgRating === ''} onChange={handleChange} />
+                                Keine
                             </label>
                         </div>
                     </div>
