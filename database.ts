@@ -1,187 +1,163 @@
 /** @jsxImportSource react */
-import { openDB, IDBPDatabase } from 'idb';
-import type { Student, Entry } from './types';
+// Browser-kompatible DB mit idb
+// Original TypeScript-Typen:
+// Student: { id?: number, name: string, ... }
+// Entry: { id?: number, studentId: number, date: string, ... }
+
+import { openDB } from 'https://cdn.jsdelivr.net/npm/idb@7/+esm';
 
 const DB_NAME = "peda-protokoll";
-export const DB_VERSION = 4; 
+const DB_VERSION = 4;
 const STUDENT_STORE = 'students';
 const ENTRY_STORE = 'entries';
 
+let dbPromise = null;
 
-// --- DB Initialization & Connection ---
-let dbPromise: Promise<IDBPDatabase> | null = null;
-
-const getDB = (): Promise<IDBPDatabase> => {
+function getDB() {
     if (!dbPromise) {
         dbPromise = openDB(DB_NAME, DB_VERSION, {
             upgrade(db, oldVersion, newVersion, tx) {
                 console.log(`Upgrading DB from version ${oldVersion} to ${newVersion}`);
                 
-                // Student store
-                if (oldVersion < 1) {
-                    if (!db.objectStoreNames.contains(STUDENT_STORE)) {
-                        db.createObjectStore(STUDENT_STORE, { keyPath: "id", autoIncrement: true });
+                if (oldVersion < 1 && !db.objectStoreNames.contains(STUDENT_STORE)) {
+                    db.createObjectStore(STUDENT_STORE, { keyPath: "id", autoIncrement: true });
+                }
+
+                if (oldVersion < 2 && !db.objectStoreNames.contains(ENTRY_STORE)) {
+                    const store = db.createObjectStore(ENTRY_STORE, { keyPath: "id", autoIncrement: true });
+                    store.createIndex("studentId", "studentId", { unique: false });
+                    store.createIndex("date", "date", { unique: false });
+                }
+
+                if (oldVersion < 3 && db.objectStoreNames.contains(ENTRY_STORE)) {
+                    const entryStore = tx.objectStore(ENTRY_STORE);
+                    if (!entryStore.indexNames.contains('studentId')) {
+                        entryStore.createIndex("studentId", "studentId", { unique: false });
+                    }
+                    if (!entryStore.indexNames.contains('date')) {
+                        entryStore.createIndex("date", "date", { unique: false });
                     }
                 }
-            
-                // Entry store mit Indizes
-                if (oldVersion < 2) {
-                    if (!db.objectStoreNames.contains(ENTRY_STORE)) {
-                        const store = db.createObjectStore(ENTRY_STORE, { keyPath: "id", autoIncrement: true });
-                        store.createIndex("studentId", "studentId", { unique: false });
-                        store.createIndex("date", "date", { unique: false });
-                    }
-                }
-            
-                // Indizes sicherstellen für Version 3
-                if (oldVersion < 3) {
-                     if (db.objectStoreNames.contains(ENTRY_STORE)) {
-                        const entryStore = tx.objectStore(ENTRY_STORE);
-                        if (!entryStore.indexNames.contains('studentId')) {
-                            entryStore.createIndex("studentId", "studentId", { unique: false });
-                        }
-                        if (!entryStore.indexNames.contains('date')) {
-                            entryStore.createIndex("date", "date", { unique: false });
-                        }
-                    }
-                }
-            
-                // Datenbereinigung für Version 4
+
                 if (oldVersion < 4) {
                     console.log("Performing data cleanup for version 4");
-                    // Hier könnten Datenmigrationen stattfinden
+                    // Datenmigrationen hier möglich
                 }
-            },
+            }
         });
     }
     return dbPromise;
-};
+}
 
-// --- Public initDB function to be called on app start ---
-export const initDB = async (): Promise<IDBPDatabase> => {
+export async function initDB() {
     const db = await getDB();
-    // Clean up potential orphan entries on startup to maintain data integrity.
     await cleanOrphanEntries(db);
     return db;
-};
+}
 
-
-// --- Data Cleanup ---
-const cleanOrphanEntries = async (db: IDBPDatabase) => {
-    // This function is critical for data integrity. The previous implementation could
-    // block the DB if it failed silently. This version is more robust.
+async function cleanOrphanEntries(db) {
     try {
-        const studentKeys = await db.getAllKeys("students");
+        const studentKeys = await db.getAllKeys(STUDENT_STORE);
         const validStudentIds = new Set(studentKeys);
-        
-        const allEntries = await db.getAll("entries");
 
-        const entryIdsToDelete: number[] = [];
-        for (const entry of allEntries) {
-            if (!validStudentIds.has(entry.studentId)) {
-                if (entry.id) {
-                    entryIdsToDelete.push(entry.id);
-                }
-            }
-        }
+        const allEntries = await db.getAll(ENTRY_STORE);
+        const entryIdsToDelete = allEntries
+            .filter(e => !validStudentIds.has(e.studentId))
+            .map(e => e.id)
+            .filter(Boolean);
 
         if (entryIdsToDelete.length > 0) {
             console.warn(`[DB Cleanup] Found ${entryIdsToDelete.length} orphan entries. Deleting.`);
-            const tx = db.transaction("entries", "readwrite");
+            const tx = db.transaction(ENTRY_STORE, "readwrite");
             for (const id of entryIdsToDelete) {
                 tx.store.delete(id);
             }
             await tx.done;
             console.log(`[DB Cleanup] Orphan entries deleted successfully.`);
         }
-    } catch (error) {
-        console.error("[DB Cleanup] Error during orphan entry cleanup:", error);
+    } catch (err) {
+        console.error("[DB Cleanup] Error:", err);
     }
-};
-
+}
 
 // --- Student Operations ---
-export const addStudentToDB = async (student: Omit<Student, "id">): Promise<IDBValidKey> => {
+export async function addStudentToDB(student) {
     const db = await getDB();
-    return db.add("students", student);
-};
+    return db.add(STUDENT_STORE, student);
+}
 
-export const updateStudentInDB = async (student: Student): Promise<IDBValidKey> => {
+export async function updateStudentInDB(student) {
     const db = await getDB();
-    return db.put("students", student);
-};
+    return db.put(STUDENT_STORE, student);
+}
 
-export const getStudentsFromDB = async (): Promise<Student[]> => {
+export async function getStudentsFromDB() {
     const db = await getDB();
-    return db.getAll("students");
-};
+    return db.getAll(STUDENT_STORE);
+}
 
-export const deleteStudentFromDB = async (studentId: number): Promise<void> => {
+export async function deleteStudentFromDB(studentId) {
     const db = await getDB();
-    
     try {
         console.log(`Deleting student ${studentId} and related entries...`);
-        
-        // Zuerst die zugehörigen Einträge finden
-        const entryKeysToDelete = await db.getAllKeysFromIndex("entries", "studentId", studentId);
-        console.log(`Found ${entryKeysToDelete.length} entries to delete for student ${studentId}`);
-        
-        // Dann eine einzige Transaktion für alle Löschvorgänge starten
-        const tx = db.transaction(["students", "entries"], "readwrite");
-        
-        // Einträge löschen
+
+        // Alle Einträge abrufen und filtern
+        const allEntries = await db.getAll(ENTRY_STORE);
+        const entryKeysToDelete = allEntries
+            .filter(e => e.studentId === studentId)
+            .map(e => e.id)
+            .filter(Boolean);
+
+        const tx = db.transaction([STUDENT_STORE, ENTRY_STORE], "readwrite");
         for (const key of entryKeysToDelete) {
-            tx.objectStore("entries").delete(key);
+            tx.objectStore(ENTRY_STORE).delete(key);
         }
-        
-        // Student löschen
-        tx.objectStore("students").delete(studentId);
-        
+        tx.objectStore(STUDENT_STORE).delete(studentId);
         await tx.done;
+
         console.log(`Successfully deleted student ${studentId} and ${entryKeysToDelete.length} entries`);
-        
-    } catch (error) {
-        console.error("Error in deleteStudentFromDB:", error);
-        throw new Error(`Could not delete student ${studentId}: ${error}`);
+    } catch (err) {
+        console.error("Error in deleteStudentFromDB:", err);
+        throw err;
     }
-};
+}
 
 // --- Entry Operations ---
-export const addEntryToDB = async (entry: Omit<Entry, 'id'>): Promise<IDBValidKey> => {
+export async function addEntryToDB(entry) {
     const db = await getDB();
-    return db.add("entries", entry);
-};
+    return db.add(ENTRY_STORE, entry);
+}
 
-export const updateEntryInDB = async (entry: Entry): Promise<IDBValidKey> => {
+export async function updateEntryInDB(entry) {
     const db = await getDB();
-    return db.put("entries", entry);
-};
+    return db.put(ENTRY_STORE, entry);
+}
 
-export const getAllEntriesFromDB = async (): Promise<Entry[]> => {
+export async function getAllEntriesFromDB() {
     const db = await getDB();
-    return db.getAll("entries");
-};
+    return db.getAll(ENTRY_STORE);
+}
 
-export const deleteEntryFromDB = async (entryId: number): Promise<void> => {
+export async function deleteEntryFromDB(entryId) {
     const db = await getDB();
-    await db.delete("entries", entryId);
-};
+    return db.delete(ENTRY_STORE, entryId);
+}
 
-// --- Bulk Data Operations ---
-export const importData = async (students: Student[], entries: Entry[]): Promise<void> => {
+// --- Bulk Operations ---
+export async function importData(students, entries) {
     const db = await getDB();
-    const tx = db.transaction(["students", "entries"], "readwrite");
-    tx.objectStore("students").clear();
-    tx.objectStore("entries").clear();
-    students.forEach(s => tx.objectStore("students").put(s));
-    entries.forEach(e => tx.objectStore("entries").put(e));
+    const tx = db.transaction([STUDENT_STORE, ENTRY_STORE], "readwrite");
+    tx.objectStore(STUDENT_STORE).clear();
+    tx.objectStore(ENTRY_STORE).clear();
+    students.forEach(s => tx.objectStore(STUDENT_STORE).put(s));
+    entries.forEach(e => tx.objectStore(ENTRY_STORE).put(e));
     await tx.done;
-};
+}
 
-export const clearAllData = async (): Promise<void> => {
+export async function clearAllData() {
     const db = await getDB();
-    const tx = db.transaction(["students", "entries"], "readwrite");
-    tx.objectStore("students").clear();
-    tx.objectStore("entries").clear();
+    const tx = db.transaction([STUDENT_STORE, ENTRY_STORE], "readwrite");
+    tx.objectStore(STUDENT_STORE).clear();
+    tx.objectStore(ENTRY_STORE).clear();
     await tx.done;
-};
+}
