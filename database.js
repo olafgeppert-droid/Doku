@@ -101,21 +101,24 @@ export async function deleteStudentFromDB(studentId) {
     try {
         console.log(`Deleting student ${studentId} and related entries...`);
 
-        // Alle Einträge abrufen und filtern
-        const allEntries = await db.getAll(ENTRY_STORE);
-        const entryKeysToDelete = allEntries
-            .filter(e => e.studentId === studentId)
-            .map(e => e.id)
-            .filter(Boolean);
+        // Transaktion über beide Stores
+        const tx = db.transaction([STUDENT_STORE, ENTRY_STORE], 'readwrite');
+        const studentStore = tx.objectStore(STUDENT_STORE);
+        const entryStore = tx.objectStore(ENTRY_STORE);
 
-        const tx = db.transaction([STUDENT_STORE, ENTRY_STORE], "readwrite");
-        for (const key of entryKeysToDelete) {
-            tx.objectStore(ENTRY_STORE).delete(key);
+        // Alle Einträge des Schülers löschen über Index
+        const index = entryStore.index('studentId');
+        const entriesToDelete = await index.getAllKeys(IDBKeyRange.only(studentId));
+        for (const entryId of entriesToDelete) {
+            entryStore.delete(entryId);
         }
-        tx.objectStore(STUDENT_STORE).delete(studentId);
+
+        // Schüler löschen
+        studentStore.delete(studentId);
+
         await tx.done;
 
-        console.log(`Successfully deleted student ${studentId} and ${entryKeysToDelete.length} entries`);
+        console.log(`Successfully deleted student ${studentId} and ${entriesToDelete.length} entries`);
     } catch (err) {
         console.error("Error in deleteStudentFromDB:", err);
         throw err;
