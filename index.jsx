@@ -3,15 +3,15 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 
 // --- Components ---
-import Header from './Header.js';
-import Navigation from './Navigation.js';
-import Toolbar from './Toolbar.js';
-import StudentDetails from './StudentDetails.js';
-import DayDetails from './DayDetails.js';
-import StudentModal from './StudentModal.js';
-import EntryModal from './EntryModal.js';
-import SettingsModal from './SettingsModal.js';
-import HelpModal from './HelpModal.js';
+import Header from './Header.jsx';
+import Navigation from './Navigation.jsx';
+import Toolbar from './Toolbar.jsx';
+import StudentDetails from './StudentDetails.jsx';
+import DayDetails from './DayDetails.jsx';
+import StudentModal from './StudentModal.jsx';
+import EntryModal from './EntryModal.jsx';
+import SettingsModal from './SettingsModal.jsx';
+import HelpModal from './HelpModal.jsx';
 import StatisticsModal from './StatisticsModal.js';
 import MasterDataModal from './MasterDataModal.js';
 
