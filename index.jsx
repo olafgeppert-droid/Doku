@@ -12,8 +12,8 @@ import StudentModal from './StudentModal.jsx';
 import EntryModal from './EntryModal.jsx';
 import SettingsModal from './SettingsModal.jsx';
 import HelpModal from './HelpModal.jsx';
-import StatisticsModal from './StatisticsModal.js';
-import MasterDataModal from './MasterDataModal.js';
+import StatisticsModal from './StatisticsModal.jsx';
+import MasterDataModal from './MasterDataModal.jsx';
 
 // --- Database ---
 import {
