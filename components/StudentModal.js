@@ -1,18 +1,37 @@
 /** @jsxImportSource react */
 import React, { useState, useEffect, useMemo } from 'react';
-import type { Student, MasterData } from './types';
-import { capitalizeWords } from './utils';
-import { FAVORITE_NATIONALITIES, ALL_NATIONALITIES } from './nationalities';
+import { capitalizeWords } from './utils.js';
+import { FAVORITE_NATIONALITIES, ALL_NATIONALITIES } from './nationalities.js';
 
-interface StudentModalProps {
-    onClose: () => void;
-    onSaveStudent: (student: Student | Omit<Student, 'id'>) => void;
-    onDeleteStudent: (student: Student) => void;
-    studentToEdit?: Student | null;
-    masterData: MasterData;
-}
+/**
+ * @typedef {Object} Student
+ * @property {number} [id]
+ * @property {string} name
+ * @property {string} schoolYear
+ * @property {string} school
+ * @property {string} className
+ * @property {string} [gender]
+ * @property {string} [nationality]
+ * @property {string} [germanLevel]
+ * @property {string} [notes]
+ */
 
-const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, masterData }: StudentModalProps) => {
+/**
+ * @typedef {Object} MasterData
+ * @property {string[]} schoolYears
+ * @property {Object.<string,string[]>} schools
+ */
+
+/**
+ * StudentModal component
+ * @param {Object} props
+ * @param {() => void} props.onClose
+ * @param {(student: Student) => void} props.onSaveStudent
+ * @param {(student: Student) => void} props.onDeleteStudent
+ * @param {Student|null} [props.studentToEdit]
+ * @param {MasterData} props.masterData
+ */
+const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, masterData }) => {
     const [formData, setFormData] = useState({ 
         name: '', 
         schoolYear: '', 
@@ -40,7 +59,7 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
         }
     }, [studentToEdit]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const handleChange = (e) => {
         const { name, value } = e.target;
         if (name === 'school') {
             setFormData(prev => ({ ...prev, school: value, className: '' }));
@@ -48,7 +67,7 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
             setFormData(prev => ({ ...prev, [name]: value }));
         }
     };
-    
+
     const classOptions = useMemo(() => {
         if (!formData.school || !masterData.schools[formData.school]) return [];
         return masterData.schools[formData.school];
@@ -56,7 +75,7 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
 
     const handleSubmit = () => {
         const { name, schoolYear, school, gender } = formData;
-        const errors: string[] = [];
+        const errors = [];
         if (!name.trim()) errors.push('Name');
         if (!schoolYear) errors.push('Schuljahr');
         if (!school) errors.push('Schule');
