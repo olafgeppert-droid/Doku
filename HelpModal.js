@@ -65,13 +65,13 @@ const HelpModal = ({ onClose, onLoadSampleData, onClearAllData, onDownloadSample
                     <p>Die folgenden Aktionen sind nützlich, um die Anwendung zu testen oder komplett neu zu beginnen. <strong>Achtung: Diese Aktionen können nicht rückgängig gemacht werden.</strong></p>
                     <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
                         <button type="button" className="btn btn-primary" onClick={onLoadSampleData}>
-                           📊 Beispieldatensatz laden
+                            📊 Beispieldatensatz laden
                         </button>
                         <button type="button" className="btn btn-secondary" onClick={onDownloadSampleData}>
-                           💾 Beispieldaten herunterladen
+                            💾 Beispieldaten herunterladen
                         </button>
                         <button type="button" className="btn btn-danger" onClick={onClearAllData}>
-                           🗑️ Alle Daten löschen
+                            🗑️ Alle Daten löschen
                         </button>
                     </div>
                 </div>
