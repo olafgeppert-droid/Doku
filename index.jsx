@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client';
 // --- Components ---
 import Header from './Header.jsx';
 import Navigation from './Navigation.jsx';
-import Toolbar from './components/Toolbar.jsx';
+import Toolbar from './components/Toolbar.tsx';
 import StudentDetails from './components/StudentDetails.jsx';
 import DayDetails from './components/DayDetails.jsx';
 import StudentModal from './components/StudentModal.jsx';
