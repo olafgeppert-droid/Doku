@@ -11,21 +11,13 @@ interface StudentDetailsProps {
     onDateFilterChange: (date: string) => void;
 }
 
-const StudentDetails = ({
-    student,
-    entries,
-    selectedEntry,
-    onSelectEntry,
-    dateFilter,
-    onDateFilterChange
-}: StudentDetailsProps) => {
-    
+const StudentDetails = ({ student, entries, selectedEntry, onSelectEntry, dateFilter, onDateFilterChange }: StudentDetailsProps) => {
     const getErfolgRatingText = (rating: Entry['erfolgRating']) => {
         if (rating === 'positiv') return ' (Positiv)';
         if (rating === 'negativ') return ' (Negativ)';
         return '';
     };
-    
+
     const today = new Date().toISOString().split('T')[0];
 
     return (
@@ -34,7 +26,6 @@ const StudentDetails = ({
                 <div className="student-details-title-group">
                     <h2>Protokolle für {student.name}</h2>
                 </div>
-
                 <div className="student-info">
                     {student.gender && <span><strong>Geschlecht:</strong> {student.gender}</span>}
                     {student.nationality && <span><strong>Nationalität:</strong> {student.nationality}</span>}
@@ -43,12 +34,7 @@ const StudentDetails = ({
 
                 {student.notes && (
                     <div className="entry-card" style={{ marginBottom: '1rem', cursor: 'default' }}>
-                        <p>
-                            <strong>Anmerkungen:</strong>{' '}
-                            {student.notes.split('\n').map((line, i) => (
-                                <React.Fragment key={i}>{line}<br /></React.Fragment>
-                            ))}
-                        </p>
+                        <p><strong>Anmerkungen:</strong> {student.notes.split('\n').map((line, i) => <React.Fragment key={i}>{line}<br /></React.Fragment>)}</p>
                     </div>
                 )}
 
@@ -95,18 +81,12 @@ const StudentDetails = ({
                     >
                         <div className="entry-card-header">
                             <span className="subject">{entry.subject}</span>
-                            <span>{new Date(entry.date).toLocaleDateString('de-DE', {
-                                year: 'numeric', month: 'long', day: 'numeric'
-                            })}</span>
+                            <span>{new Date(entry.date).toLocaleDateString('de-DE', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                         </div>
                         <div className="entry-content">
                             {entry.observations && <p><strong>Beobachtung:</strong> {entry.observations}</p>}
                             {entry.measures && <p><strong>Maßnahme:</strong> {entry.measures}</p>}
-                            {entry.erfolg && (
-                                <p>
-                                    <strong>Erfolg{getErfolgRatingText(entry.erfolgRating)}:</strong> {entry.erfolg}
-                                </p>
-                            )}
+                            {entry.erfolg && <p><strong>Erfolg{getErfolgRatingText(entry.erfolgRating)}:</strong> {entry.erfolg}</p>}
                         </div>
                     </div>
                 ))
