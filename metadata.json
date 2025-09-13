@@ -1,6 +1,6 @@
 {
-  "name": "Pädagogische Dokumentation_v1.5.1_es klappt nicht",
-  "description": "kein löschen möglich. daten laden klappt nicht",
+  "name": "Pädagogische Dokumentation",
+  "description": "Web-App zur pädagogischen Dokumentation",
   "version": "1.5.1",
   "requestFramePermissions": []
 }
