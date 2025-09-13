@@ -15,62 +15,91 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Repo auschecken
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2. Node installieren
       - name: Use Node.js 18
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
+      # 3. Abhängigkeiten nur installieren, wenn package.json existiert
       - name: Install dependencies if package.json exists
         run: |
           if [ -f package.json ]; then
+            echo "Installing npm dependencies..."
             if [ -f package-lock.json ]; then
               npm ci --no-audit --no-fund
             else
               npm install --no-audit --no-fund
             fi
           else
-            echo "No package.json — continue without npm install"
+            echo "No package.json found – skipping npm install"
           fi
 
-      - name: Build (transpile TSX -> JS)
+      # 4. Build Schritt – erkennt Vite, CRA oder buildless
+      - name: Build (detect CRA / Vite / TSX fallback)
         run: |
           set -e
+
+          # Fall 1: package.json + build script vorhanden
           if [ -f package.json ] && node -e "console.log(require('./package.json').scripts && require('./package.json').scripts.build ? 'yes' : 'no')" | grep -q yes; then
-            echo "Running npm run build"
+            echo "→ Running npm run build"
             npm run build
             exit 0
           fi
+
+          # Fall 2: tsconfig.json vorhanden → tsc nutzen
           if [ -f tsconfig.json ]; then
-            echo "Using tsc to transpile (.ts/.tsx -> dist/)"
+            echo "→ Transpiling TS/TSX with tsc"
             npx -y typescript --version >/dev/null 2>&1 || npm i -g typescript
             npx -y tsc --project tsconfig.json
             exit 0
           fi
+
+          # Fall 3: keine package.json, keine tsconfig.json, aber index.tsx vorhanden → esbuild bundeln
           if [ -f index.tsx ]; then
-            echo "Fallback: using esbuild to bundle index.tsx -> dist/index.js"
-            npx -y esbuild index.tsx --bundle --outfile=dist/index.js --format=esm --loader:.tsx=tsx --target=es2017
+            echo "→ Bundling index.tsx with esbuild (no package.json/tsconfig.json found)"
+            npx -y esbuild index.tsx \
+              --bundle \
+              --outfile=dist/index.js \
+              --format=esm \
+              --loader:.tsx=tsx \
+              --target=es2017
             exit 0
           fi
-          echo "No build rule applied"
+
+          echo "❌ No build step applied – missing package.json, tsconfig.json, and index.tsx"
           exit 1
 
+      # 5. Output-Ordner für GitHub Pages vorbereiten
       - name: Prepare Pages output folder
         run: |
           rm -rf out || true
           mkdir out
-          cp index.html out/
+          # index.html kopieren
+          if [ -f index.html ]; then cp index.html out/; fi
+          # dist oder build ins out kopieren
           if [ -d dist ]; then cp -r dist out/; fi
+          if [ -d build ]; then cp -r build out/; fi
+          # zusätzliche statische Dateien falls vorhanden
+          for f in *.css *.js *.png *.jpg *.jpeg *.gif *.svg *.ico help*.html; do
+            if [ -f "$f" ]; then cp "$f" out/; fi
+          done
 
+      # 6. GitHub Pages konfigurieren
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
+      # 7. Artefakte hochladen
       - name: Upload artifact for GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./out
 
+      # 8. Deployment
       - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
