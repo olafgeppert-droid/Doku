@@ -1,6 +1,6 @@
 /** @jsxImportSource react */
 import React from 'react';
-import type { Student, Entry } from './types';
+import type { Entry } from './types';
 
 interface DayDetailsProps {
     date: string;
@@ -11,11 +11,7 @@ interface DayDetailsProps {
 }
 
 const DayDetails = ({ date, entries, selectedEntry, onSelectEntry, studentNameMap }: DayDetailsProps) => {
-    const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('de-DE', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
+    const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('de-DE', { year: 'numeric', month: 'long', day: 'numeric' });
 
     const getErfolgRatingText = (rating: Entry['erfolgRating']) => {
         if (rating === 'positiv') return ' (Positiv)';
@@ -49,11 +45,7 @@ const DayDetails = ({ date, entries, selectedEntry, onSelectEntry, studentNameMa
                         <div className="entry-content">
                             {entry.observations && <p><strong>Beobachtung:</strong> {entry.observations}</p>}
                             {entry.measures && <p><strong>Maßnahme:</strong> {entry.measures}</p>}
-                            {entry.erfolg && (
-                                <p>
-                                    <strong>Erfolg{getErfolgRatingText(entry.erfolgRating)}:</strong> {entry.erfolg}
-                                </p>
-                            )}
+                            {entry.erfolg && <p><strong>Erfolg{getErfolgRatingText(entry.erfolgRating)}:</strong> {entry.erfolg}</p>}
                         </div>
                     </div>
                 ))
