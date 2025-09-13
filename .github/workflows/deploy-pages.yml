@@ -1,0 +1,88 @@
+name: Build and deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies if package.json exists
+        run: |
+          if [ -f package.json ]; then
+            if [ -f package-lock.json ]; then
+              npm ci --no-audit --no-fund
+            else
+              npm install --no-audit --no-fund
+            fi
+          else
+            echo "No package.json — continue without npm install"
+          fi
+
+      - name: Build (transpile TSX -> JS)
+        run: |
+          set -e
+          # 1) If package.json has a build script, use it
+          if [ -f package.json ] && node -e "console.log(require('./package.json').scripts && require('./package.json').scripts.build ? 'yes' : 'no')" | grep -q yes; then
+            echo "Running npm run build"
+            npm run build
+            exit 0
+          fi
+
+          # 2) If tsconfig.json exists, use tsc to output to dist
+          if [ -f tsconfig.json ]; then
+            echo "Using tsc to transpile (.ts/.tsx -> dist/)"
+            npx -y typescript --version >/dev/null 2>&1 || npm i -g typescript
+            npx -y tsc --project tsconfig.json
+            exit 0
+          fi
+
+          # 3) Fallback: use esbuild to bundle an entry index.tsx -> dist/index.js
+          if [ -f index.tsx ]; then
+            echo "Fallback: using esbuild to bundle index.tsx -> dist/index.js"
+            npx -y esbuild index.tsx --bundle --outfile=dist/index.js --format=esm --loader:.tsx=tsx --target=es2017
+            exit 0
+          fi
+
+          echo "No build rule applied: no package.json/scripts, no tsconfig.json and no index.tsx found"
+          exit 1
+
+      - name: Prepare Pages output folder
+        run: |
+          rm -rf out || true
+          mkdir out
+          # copy index.html (must exist)
+          cp index.html out/
+          # copy optional root css/help files if present
+          for f in index.css help.html help*.html *.css; do
+            if [ -f "$f" ]; then cp "$f" out/ || true; fi
+          done
+          # copy dist (build output)
+          if [ -d dist ]; then cp -r dist out/; else echo "Warning: dist not found"; fi
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload artifact for GitHub Pages
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: ./out
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1
