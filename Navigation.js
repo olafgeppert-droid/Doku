@@ -1,9 +1,26 @@
 /** @jsxImportSource react */
 import React from 'react';
-import type { Student } from './types';
+import { Student } from './types.js'; // JS-Version der Types
 
 /**
  * Navigation component
+ * @param {Object} props
+ * @param {Student[]} props.students
+ * @param {(student: Student) => void} props.onSelectStudent
+ * @param {Student|null} props.selectedStudent
+ * @param {Object} props.filters
+ * @param {(filters: Object) => void} props.setFilters
+ * @param {Object} props.filterOptions
+ * @param {string} props.globalDateFilter
+ * @param {(date: string) => void} props.onGlobalDateChange
+ * @param {Student[]} props.studentOptions
+ * @param {() => void} props.onOpenSettings
+ * @param {() => void} props.onOpenStatistics
+ * @param {() => void} props.onOpenHelp
+ * @param {boolean} props.isNavVisible
+ * @param {() => void} props.onClose
+ * @param {string} props.searchQuery
+ * @param {(e: Event) => void} props.onSearchChange
  */
 const Navigation = ({
     students,
@@ -23,12 +40,12 @@ const Navigation = ({
     searchQuery,
     onSearchChange,
 }) => {
-    const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFilters(prev => ({ ...prev, [name]: value }));
+    const handleFilterChange = (e) => {
+        const target = e.target;
+        setFilters(prev => ({ ...prev, [target.name]: target.value }));
     };
 
-    const handleStudentClick = (student: Student) => {
+    const handleStudentClick = (student) => {
         onSelectStudent(student);
         onClose(); // Close mobile nav on selection
     };
