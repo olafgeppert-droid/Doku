@@ -207,4 +207,4 @@ export const ALL_NATIONALITIES = [
   'Vietnam',
   'Zentralafrikanische Republik',
   'Zypern'
-].sort((a, b) => a.localeCompare(b));
+].sort((a, b) => a.localeCompare(b, 'de'));
