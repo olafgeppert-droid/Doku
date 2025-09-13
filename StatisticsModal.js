@@ -1,12 +1,16 @@
 /** @jsxImportSource react */
 import React, { useMemo } from 'react';
+import type { Student, Entry } from './types';
 
-const StatisticsModal = ({ onClose, students, allEntries }) => {
+interface StatisticsModalProps {
+    onClose: () => void;
+    students: Student[];
+    allEntries: Entry[];
+}
 
+const StatisticsModal = ({ onClose, students, allEntries }: StatisticsModalProps) => {
     const stats = useMemo(() => {
-        if (!students.length && !allEntries.length) {
-            return null;
-        }
+        if (students.length === 0 && allEntries.length === 0) return null;
 
         const totalStudents = students.length;
         const totalEntries = allEntries.length;
@@ -15,14 +19,14 @@ const StatisticsModal = ({ onClose, students, allEntries }) => {
             const rating = entry.erfolgRating || 'Keine';
             acc[rating] = (acc[rating] || 0) + 1;
             return acc;
-        }, {});
+        }, {} as Record<string, number>);
 
         const entriesPerStudent = allEntries.reduce((acc, entry) => {
             acc[entry.studentId] = (acc[entry.studentId] || 0) + 1;
             return acc;
-        }, {});
+        }, {} as Record<number, number>);
 
-        const studentNameMap = new Map(students.map(s => [s.id, s.name]));
+        const studentNameMap = new Map(students.map(s => [s.id!, s.name]));
 
         let mostActiveStudent = 'N/A';
         let maxEntries = 0;
@@ -39,7 +43,7 @@ const StatisticsModal = ({ onClose, students, allEntries }) => {
                 acc[student.school] = (acc[student.school] || 0) + 1;
             }
             return acc;
-        }, {});
+        }, {} as Record<string, number>);
 
         return {
             totalStudents,
@@ -51,7 +55,7 @@ const StatisticsModal = ({ onClose, students, allEntries }) => {
             },
             mostActiveStudent: totalEntries > 0 ? `${mostActiveStudent} (${maxEntries} Einträge)` : 'N/A',
             entriesPerSchool,
-            averageEntriesPerStudent: totalStudents > 0 ? (totalEntries / totalStudents).toFixed(2) : 0,
+            averageEntriesPerStudent: totalStudents > 0 ? (totalEntries / totalStudents).toFixed(2) : '0',
         };
     }, [students, allEntries]);
 
