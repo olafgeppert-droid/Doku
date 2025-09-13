@@ -1,6 +1,6 @@
 /** @jsxImportSource react */
 import React from 'react';
-import type { Entry } from './types';
+import type { Student, Entry } from './types';
 
 interface DayDetailsProps {
     date: string;
@@ -11,19 +11,24 @@ interface DayDetailsProps {
 }
 
 const DayDetails = ({ date, entries, selectedEntry, onSelectEntry, studentNameMap }: DayDetailsProps) => {
-    const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('de-DE', { year: 'numeric', month: 'long', day: 'numeric' });
-    
+    const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('de-DE', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
     const getErfolgRatingText = (rating: Entry['erfolgRating']) => {
         if (rating === 'positiv') return ' (Positiv)';
         if (rating === 'negativ') return ' (Negativ)';
         return '';
-    }
+    };
 
     return (
         <div>
             <div className="student-details-header">
                 <h2>Einträge für den {formattedDate}</h2>
             </div>
+
             {entries.length === 0 ? (
                 <div className="no-entries">
                     <h3>Keine Einträge für diesen Tag</h3>
@@ -37,12 +42,18 @@ const DayDetails = ({ date, entries, selectedEntry, onSelectEntry, studentNameMa
                         onClick={() => onSelectEntry(entry)}
                     >
                         <div className="entry-card-header">
-                            <span className="subject">{studentNameMap.get(entry.studentId) || 'Unbekannt'} - {entry.subject}</span>
+                            <span className="subject">
+                                {studentNameMap.get(entry.studentId) || 'Unbekannt'} - {entry.subject}
+                            </span>
                         </div>
                         <div className="entry-content">
                             {entry.observations && <p><strong>Beobachtung:</strong> {entry.observations}</p>}
                             {entry.measures && <p><strong>Maßnahme:</strong> {entry.measures}</p>}
-                            {entry.erfolg && <p><strong>Erfolg{getErfolgRatingText(entry.erfolgRating)}:</strong> {entry.erfolg}</p>}
+                            {entry.erfolg && (
+                                <p>
+                                    <strong>Erfolg{getErfolgRatingText(entry.erfolgRating)}:</strong> {entry.erfolg}
+                                </p>
+                            )}
                         </div>
                     </div>
                 ))
