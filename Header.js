@@ -1,11 +1,11 @@
 /** @jsxImportSource react */
 import React from 'react';
 
-interface HeaderProps {
-    onToggleNav: () => void;
-}
-
-const Header = ({ onToggleNav }: HeaderProps) => {
+/**
+ * Header component
+ * @param {{ onToggleNav: () => void }} props
+ */
+const Header = ({ onToggleNav }) => {
     const currentDate = new Date().toLocaleDateString('de-DE', {
         weekday: 'long',
         year: 'numeric',
@@ -15,7 +15,11 @@ const Header = ({ onToggleNav }: HeaderProps) => {
 
     return (
         <header className="app-header">
-            <button className="hamburger-menu" onClick={onToggleNav} aria-label="Navigation umschalten">
+            <button
+                className="hamburger-menu"
+                onClick={onToggleNav}
+                aria-label="Navigation umschalten"
+            >
                 ☰
             </button>
             <h1>Dokumentation pädagogische Arbeit</h1>
