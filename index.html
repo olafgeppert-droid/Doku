@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Pädagogische Dokumentation</title>
 
   <!-- CSS -->
@@ -16,7 +16,7 @@
   <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
 
-  <!-- Importmap -->
+  <!-- Importmap für Browser-Modul-Imports -->
   <script type="importmap">
   {
     "imports": {
@@ -30,10 +30,10 @@
   </script>
 </head>
 <body>
-  <noscript>Bitte JavaScript aktivieren, um die App zu verwenden.</noscript>
-  <div id="root"></div>
+  <noscript>Bitte aktivieren Sie JavaScript, um die Anwendung zu nutzen.</noscript>
+  <div id="root" aria-label="Hauptanwendungsbereich"></div>
 
-  <!-- Einstiegspunkt: wir laden direkt index.tsx -->
+  <!-- Einstiegspunkt der App -->
   <script type="module" src="./index.tsx"></script>
 </body>
 </html>
