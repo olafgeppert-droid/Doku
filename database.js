@@ -1,9 +1,5 @@
 /** @jsxImportSource react */
 // Browser-kompatible DB mit idb
-// Original TypeScript-Typen:
-// Student: { id?: number, name: string, ... }
-// Entry: { id?: number, studentId: number, date: string, ... }
-
 import { openDB } from 'https://cdn.jsdelivr.net/npm/idb@7/+esm';
 
 const DB_NAME = "peda-protokoll";
@@ -41,7 +37,7 @@ function getDB() {
 
                 if (oldVersion < 4) {
                     console.log("Performing data cleanup for version 4");
-                    // Datenmigrationen hier möglich
+                    // Datenmigrationen möglich
                 }
             }
         });
@@ -58,7 +54,7 @@ export async function initDB() {
 async function cleanOrphanEntries(db) {
     try {
         const studentKeys = await db.getAllKeys(STUDENT_STORE);
-        const validStudentIds = new Set(studentKeys);
+        const validStudentIds = new Set(studentKeys.filter(Boolean));
 
         const allEntries = await db.getAll(ENTRY_STORE);
         const entryIdsToDelete = allEntries
@@ -83,11 +79,17 @@ async function cleanOrphanEntries(db) {
 // --- Student Operations ---
 export async function addStudentToDB(student) {
     const db = await getDB();
+    if (!student || !student.name || !student.schoolYear || !student.school) {
+        throw new Error("Ungültige Studentendaten für addStudentToDB");
+    }
     return db.add(STUDENT_STORE, student);
 }
 
 export async function updateStudentInDB(student) {
     const db = await getDB();
+    if (!student || !student.id) {
+        throw new Error("Student ID fehlt für updateStudentInDB");
+    }
     return db.put(STUDENT_STORE, student);
 }
 
@@ -98,27 +100,24 @@ export async function getStudentsFromDB() {
 
 export async function deleteStudentFromDB(studentId) {
     const db = await getDB();
-    try {
-        console.log(`Deleting student ${studentId} and related entries...`);
+    if (!studentId) throw new Error("Student ID fehlt für deleteStudentFromDB");
 
-        // Transaktion über beide Stores
+    try {
         const tx = db.transaction([STUDENT_STORE, ENTRY_STORE], 'readwrite');
         const studentStore = tx.objectStore(STUDENT_STORE);
         const entryStore = tx.objectStore(ENTRY_STORE);
 
         // Alle Einträge des Schülers löschen über Index
-        const index = entryStore.index('studentId');
-        const entriesToDelete = await index.getAllKeys(IDBKeyRange.only(studentId));
-        for (const entryId of entriesToDelete) {
-            entryStore.delete(entryId);
+        if (entryStore.indexNames.contains('studentId')) {
+            const entriesToDelete = await entryStore.index('studentId').getAllKeys(IDBKeyRange.only(studentId));
+            for (const entryId of entriesToDelete) {
+                entryStore.delete(entryId);
+            }
         }
 
-        // Schüler löschen
         studentStore.delete(studentId);
-
         await tx.done;
-
-        console.log(`Successfully deleted student ${studentId} and ${entriesToDelete.length} entries`);
+        console.log(`Deleted student ${studentId} and related entries`);
     } catch (err) {
         console.error("Error in deleteStudentFromDB:", err);
         throw err;
@@ -128,11 +127,17 @@ export async function deleteStudentFromDB(studentId) {
 // --- Entry Operations ---
 export async function addEntryToDB(entry) {
     const db = await getDB();
+    if (!entry || !entry.studentId || !entry.date) {
+        throw new Error("Ungültige Entry-Daten für addEntryToDB");
+    }
     return db.add(ENTRY_STORE, entry);
 }
 
 export async function updateEntryInDB(entry) {
     const db = await getDB();
+    if (!entry || !entry.id) {
+        throw new Error("Entry ID fehlt für updateEntryInDB");
+    }
     return db.put(ENTRY_STORE, entry);
 }
 
@@ -143,6 +148,7 @@ export async function getAllEntriesFromDB() {
 
 export async function deleteEntryFromDB(entryId) {
     const db = await getDB();
+    if (!entryId) throw new Error("Entry ID fehlt für deleteEntryFromDB");
     return db.delete(ENTRY_STORE, entryId);
 }
 
