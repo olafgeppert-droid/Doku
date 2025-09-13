@@ -50,9 +50,7 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
     }
     
     const classOptions = useMemo(() => {
-        if (!formData.school || !masterData.schools[formData.school]) {
-            return [];
-        }
+        if (!formData.school || !masterData.schools[formData.school]) return [];
         return masterData.schools[formData.school];
     }, [formData.school, masterData.schools]);
 
@@ -70,10 +68,7 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
         }
 
         setValidationError('');
-        const formattedData = {
-            ...formData,
-            name: capitalizeWords(name.trim()),
-        };
+        const formattedData = { ...formData, name: capitalizeWords(name.trim()) };
         
         if (studentToEdit) {
             onSaveStudent({ ...formattedData, id: studentToEdit.id });
@@ -87,7 +82,6 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
             <div className="modal-content">
                 <h2>{studentToEdit ? 'Kind bearbeiten' : 'Neues Kind anlegen'}</h2>
                 <div>
-                    {/* Form fields */}
                     <div className="form-group">
                         <label htmlFor="name">Name des Kindes *</label>
                         <input id="name" name="name" type="text" value={formData.name} onChange={handleChange} autoFocus />
@@ -110,7 +104,7 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
                         <label htmlFor="className">Klasse</label>
                         <select id="className" name="className" value={formData.className} onChange={handleChange} disabled={!formData.school}>
                             <option value="">Bitte wählen...</option>
-                            {classOptions.map(className => <option key={className} value={className}>{className}</option>)}
+                            {classOptions.map(cls => <option key={cls} value={cls}>{cls}</option>)}
                         </select>
                     </div>
                     <div className="form-group">
@@ -132,11 +126,9 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
                                 ))}
                             </optgroup>
                             <optgroup label="Alle Nationen">
-                                {ALL_NATIONALITIES
-                                    .filter(nation => !FAVORITE_NATIONALITIES.includes(nation))
-                                    .map(nation => (
-                                        <option key={nation} value={nation}>{nation}</option>
-                                    ))}
+                                {ALL_NATIONALITIES.filter(nation => !FAVORITE_NATIONALITIES.includes(nation)).map(nation => (
+                                    <option key={nation} value={nation}>{nation}</option>
+                                ))}
                             </optgroup>
                         </select>
                     </div>
@@ -164,7 +156,7 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
                             <button 
                                 type="button" 
                                 className="btn btn-danger" 
-                                onClick={() => onDeleteStudent(studentToEdit)}
+                                onClick={() => studentToEdit && onDeleteStudent(studentToEdit)}
                                 style={{ marginRight: 'auto' }}
                             >
                                 🗑️ Löschen
