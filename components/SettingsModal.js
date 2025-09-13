@@ -1,32 +1,51 @@
 /** @jsxImportSource react */
 import React, { useState } from 'react';
-import type { Settings, MasterData } from './types';
-import MasterDataModal from './MasterDataModal';
+import MasterDataModal from './MasterDataModal.js';
 
-interface SettingsModalProps {
-    onClose: () => void;
-    onSave: (settings: Settings) => void;
-    currentSettings: Settings;
-    version: string;
-}
+/**
+ * @typedef {Object} MasterData
+ * @property {string[]} schoolYears
+ * @property {Object.<string, string[]>} schools
+ */
 
-const SettingsModal = ({ onClose, onSave, currentSettings, version }: SettingsModalProps) => {
+/**
+ * @typedef {Object} Settings
+ * @property {'default' | 'dark' | 'high-contrast' | 'custom'} theme
+ * @property {number} fontSize
+ * @property {number} inputFontSize
+ * @property {Object} customColors
+ * @property {string} customColors.sidebar
+ * @property {string} customColors.header
+ * @property {string} customColors.toolbar
+ * @property {string} customColors.entryBackground
+ * @property {MasterData} masterData
+ */
+
+/**
+ * SettingsModal component
+ * @param {Object} props
+ * @param {() => void} props.onClose
+ * @param {(settings: Settings) => void} props.onSave
+ * @param {Settings} props.currentSettings
+ * @param {string} props.version
+ */
+const SettingsModal = ({ onClose, onSave, currentSettings, version }) => {
     const [settings, setSettings] = useState(currentSettings);
     const [isMasterDataModalOpen, setIsMasterDataModalOpen] = useState(false);
 
-    const handleThemeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSettings(s => ({ ...s, theme: e.target.value as Settings['theme'] }));
+    const handleThemeChange = (e) => {
+        setSettings(s => ({ ...s, theme: e.target.value }));
     };
 
-    const handleFontSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFontSizeChange = (e) => {
         setSettings(s => ({ ...s, fontSize: parseInt(e.target.value, 10) }));
     };
 
-    const handleInputFontSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputFontSizeChange = (e) => {
         setSettings(s => ({ ...s, inputFontSize: parseInt(e.target.value, 10) }));
     };
 
-    const handleCustomColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleCustomColorChange = (e) => {
         const { name, value } = e.target;
         setSettings(s => ({
             ...s,
@@ -41,7 +60,7 @@ const SettingsModal = ({ onClose, onSave, currentSettings, version }: SettingsMo
         onSave(settings);
     };
 
-    const handleMasterDataUpdate = (newMasterData: MasterData) => {
+    const handleMasterDataUpdate = (newMasterData) => {
         setSettings(s => ({ ...s, masterData: newMasterData }));
         setIsMasterDataModalOpen(false);
     };
