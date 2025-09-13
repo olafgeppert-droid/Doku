@@ -67,7 +67,11 @@ const StudentDetails = ({ student, entries, selectedEntry, onSelectEntry, dateFi
                 </div>
             ) : (
                 entries.map(entry => (
-                    <div key={entry.id} className={`entry-card ${selectedEntry?.id === entry.id ? 'selected' : ''}`} onClick={() => onSelectEntry(entry)}>
+                    <div 
+                        key={entry.id} 
+                        className={`entry-card ${selectedEntry?.id === entry.id ? 'selected' : ''}`} 
+                        onClick={() => onSelectEntry(entry)}
+                    >
                         <div className="entry-card-header">
                             <span className="subject">{entry.subject}</span>
                             <span>{new Date(entry.date).toLocaleDateString('de-DE', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
