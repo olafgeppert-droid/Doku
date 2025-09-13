@@ -2,8 +2,7 @@ name: Deploy Browser-only React App to GitHub Pages
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 permissions:
   contents: read
@@ -11,52 +10,31 @@ permissions:
   id-token: write
 
 jobs:
-  deploy-browser-app:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
 
     steps:
-      # 1. Repo auschecken
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Node.js installieren (falls nötig, z. B. für npx)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      # 3. Browser-only React App vorbereiten
-      - name: Prepare output folder
-        run: |
-          rm -rf out || true
-          mkdir out
+      - name: Install dependencies
+        run: npm install
 
-          # index.html kopieren
-          if [ -f index.html ]; then cp index.html out/; fi
+      - name: Build
+        run: npm run build
 
-          # JS/CSS Dateien kopieren (inkl. database.js, types.js und React-Komponenten)
-          for f in *.js *.css *.png *.jpg *.jpeg *.gif *.svg *.ico; do
-            if [ -f "$f" ]; then cp "$f" out/; fi
-          done
-
-          # dist/build Ordner falls vorhanden kopieren
-          if [ -d dist ]; then cp -r dist/* out/; fi
-          if [ -d build ]; then cp -r build/* out/; fi
-
-      # 4. GitHub Pages konfigurieren
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      # 5. Artefakte hochladen
       - name: Upload artifact for GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./out
-          name: github-pages  # <-- genau so, ohne suffix
 
-      # 6. Deployment
       - name: Deploy to GitHub Pages
-        id: deployment
         uses: actions/deploy-pages@v4
