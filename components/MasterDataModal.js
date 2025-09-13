@@ -1,14 +1,20 @@
 /** @jsxImportSource react */
 import React, { useState } from 'react';
-import type { MasterData } from './types';
 
-interface MasterDataModalProps {
-    masterData: MasterData;
-    onSave: (newMasterData: MasterData) => void;
-    onClose: () => void;
-}
+/**
+ * @typedef {Object} MasterData
+ * @property {string[]} schoolYears
+ * @property {Object.<string, string[]>} schools
+ */
 
-const MasterDataModal = ({ masterData, onSave, onClose }: MasterDataModalProps) => {
+/**
+ * MasterDataModal component
+ * @param {Object} props
+ * @param {MasterData} props.masterData
+ * @param {(newMasterData: MasterData) => void} props.onSave
+ * @param {() => void} props.onClose
+ */
+const MasterDataModal = ({ masterData, onSave, onClose }) => {
     const [localMasterData, setLocalMasterData] = useState(masterData);
     const [newSchoolYear, setNewSchoolYear] = useState('');
     const [newSchool, setNewSchool] = useState('');
@@ -26,7 +32,7 @@ const MasterDataModal = ({ masterData, onSave, onClose }: MasterDataModalProps) 
         }
     };
 
-    const handleDeleteSchoolYear = (year: string) => {
+    const handleDeleteSchoolYear = (year) => {
         setLocalMasterData(prev => ({
             ...prev,
             schoolYears: prev.schoolYears.filter(y => y !== year)
@@ -44,7 +50,7 @@ const MasterDataModal = ({ masterData, onSave, onClose }: MasterDataModalProps) 
         }
     };
 
-    const handleDeleteSchool = (school: string) => {
+    const handleDeleteSchool = (school) => {
         const { [school]: _, ...remainingSchools } = localMasterData.schools;
         setLocalMasterData(prev => ({ ...prev, schools: remainingSchools }));
         if (selectedSchool === school) setSelectedSchool('');
@@ -64,7 +70,7 @@ const MasterDataModal = ({ masterData, onSave, onClose }: MasterDataModalProps) 
         }
     };
 
-    const handleDeleteClass = (cls: string) => {
+    const handleDeleteClass = (cls) => {
         if (selectedSchool) {
             setLocalMasterData(prev => ({
                 ...prev,
