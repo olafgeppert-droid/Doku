@@ -15,31 +15,33 @@ const MasterDataModal = ({ masterData, onSave, onClose }: MasterDataModalProps) 
     const [selectedSchool, setSelectedSchool] = useState('');
     const [newClass, setNewClass] = useState('');
 
-    // Schuljahre
+    // School Year handlers
     const handleAddSchoolYear = () => {
         if (newSchoolYear && !localMasterData.schoolYears.includes(newSchoolYear)) {
             setLocalMasterData(prev => ({ ...prev, schoolYears: [...prev.schoolYears, newSchoolYear].sort() }));
             setNewSchoolYear('');
         }
     };
-    const handleDeleteSchoolYear = (year: string) => {
-        setLocalMasterData(prev => ({ ...prev, schoolYears: prev.schoolYears.filter(y => y !== year) }));
+    const handleDeleteSchoolYear = (yearToDelete: string) => {
+        setLocalMasterData(prev => ({ ...prev, schoolYears: prev.schoolYears.filter(y => y !== yearToDelete) }));
     };
 
-    // Schulen
+    // School handlers
     const handleAddSchool = () => {
         if (newSchool && !localMasterData.schools[newSchool]) {
             setLocalMasterData(prev => ({ ...prev, schools: { ...prev.schools, [newSchool]: [] } }));
             setNewSchool('');
         }
     };
-    const handleDeleteSchool = (school: string) => {
-        const { [school]: _, ...remaining } = localMasterData.schools;
-        setLocalMasterData(prev => ({ ...prev, schools: remaining }));
-        if (selectedSchool === school) setSelectedSchool('');
+    const handleDeleteSchool = (schoolToDelete: string) => {
+        const { [schoolToDelete]: _, ...remainingSchools } = localMasterData.schools;
+        setLocalMasterData(prev => ({ ...prev, schools: remainingSchools }));
+        if (selectedSchool === schoolToDelete) {
+            setSelectedSchool('');
+        }
     };
-
-    // Klassen
+    
+    // Class handlers
     const handleAddClass = () => {
         if (newClass && selectedSchool && !localMasterData.schools[selectedSchool].includes(newClass)) {
             setLocalMasterData(prev => ({
@@ -52,16 +54,16 @@ const MasterDataModal = ({ masterData, onSave, onClose }: MasterDataModalProps) 
             setNewClass('');
         }
     };
-    const handleDeleteClass = (cls: string) => {
-        if (selectedSchool) {
-            setLocalMasterData(prev => ({
+    const handleDeleteClass = (classToDelete: string) => {
+         if (selectedSchool) {
+             setLocalMasterData(prev => ({
                 ...prev,
                 schools: {
                     ...prev.schools,
-                    [selectedSchool]: prev.schools[selectedSchool].filter(c => c !== cls)
+                    [selectedSchool]: prev.schools[selectedSchool].filter(c => c !== classToDelete)
                 }
             }));
-        }
+         }
     };
 
     return (
@@ -70,7 +72,7 @@ const MasterDataModal = ({ masterData, onSave, onClose }: MasterDataModalProps) 
                 <h2>Stammdaten verwalten</h2>
                 <div style={{ maxHeight: '60vh', overflowY: 'auto', padding: '0 1rem' }}>
                     <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-                        {/* Schuljahre */}
+                        {/* School Years Section */}
                         <div style={{ flex: 1, minWidth: '300px' }}>
                             <h3>Schuljahre</h3>
                             <div className="form-group">
@@ -86,17 +88,15 @@ const MasterDataModal = ({ masterData, onSave, onClose }: MasterDataModalProps) 
                                 ))}
                             </ul>
                         </div>
-
-                        {/* Schulen & Klassen */}
+                        {/* Schools and Classes Section */}
                         <div style={{ flex: 2, minWidth: '300px' }}>
                             <h3>Schulen und Klassen</h3>
                             <div className="form-group">
                                 <input type="text" value={newSchool} onChange={e => setNewSchool(e.target.value)} placeholder="Neue Schule hinzufügen" />
                                 <button type="button" onClick={handleAddSchool} className="btn btn-primary" style={{ marginTop: '0.5rem', width: '100%' }}>Hinzufügen</button>
                             </div>
-
                             <div className="form-group">
-                                <label>Schule auswählen</label>
+                                <label>Schule zur Bearbeitung auswählen</label>
                                 <select value={selectedSchool} onChange={e => setSelectedSchool(e.target.value)}>
                                     <option value="">Bitte wählen...</option>
                                     {Object.keys(localMasterData.schools).sort().map(school => (
@@ -126,7 +126,6 @@ const MasterDataModal = ({ masterData, onSave, onClose }: MasterDataModalProps) 
                         </div>
                     </div>
                 </div>
-
                 <div className="modal-actions">
                     <button type="button" className="btn btn-secondary" onClick={onClose}>❌ Schließen</button>
                     <button type="button" className="btn btn-primary" onClick={() => onSave(localMasterData)}>✔️ Änderungen übernehmen</button>
