@@ -1,17 +1,17 @@
 /** @jsxImportSource react */
 import React, { useState } from 'react';
+import type { Student, Entry } from './types';
 
-/**
- * EntryModal component
- * @param {Object} props
- * @param {Object} props.student
- * @param {() => void} props.onClose
- * @param {(entryData: Object) => void} props.onSaveEntry
- * @param {(entry: Object) => void} props.onDeleteEntry
- * @param {Object|null} props.entryToEdit
- */
-const EntryModal = ({ student, onClose, onSaveEntry, onDeleteEntry, entryToEdit }) => {
-    const [formData, setFormData] = useState({
+interface EntryModalProps {
+    student: Student;
+    onClose: () => void;
+    onSaveEntry: (entryData: Omit<Entry, 'id' | 'studentId'>) => void;
+    onDeleteEntry: (entry: Entry) => void;
+    entryToEdit: Entry | null;
+}
+
+const EntryModal = ({ student, onClose, onSaveEntry, onDeleteEntry, entryToEdit }: EntryModalProps) => {
+    const [formData, setFormData] = useState<Omit<Entry, 'id' | 'studentId'>>({
         date: entryToEdit?.date || new Date().toISOString().split('T')[0],
         subject: entryToEdit?.subject || '',
         observations: entryToEdit?.observations || '',
@@ -20,10 +20,10 @@ const EntryModal = ({ student, onClose, onSaveEntry, onDeleteEntry, entryToEdit 
         erfolgRating: entryToEdit?.erfolgRating || ''
     });
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         if (name === 'erfolgRating') {
-            setFormData(prev => ({ ...prev, erfolgRating: value }));
+            setFormData(prev => ({ ...prev, erfolgRating: value as 'positiv' | 'negativ' | '' }));
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
         }
