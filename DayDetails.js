@@ -1,28 +1,23 @@
 /** @jsxImportSource react */
 import React from 'react';
+import type { Entry } from './types';
 
-/**
- * DayDetails component
- * @param {Object} props
- * @param {string} props.date
- * @param {Array<Object>} props.entries
- * @param {Object|null} props.selectedEntry
- * @param {(entry: Object) => void} props.onSelectEntry
- * @param {Map<number, string>|Object} props.studentNameMap
- */
-const DayDetails = ({ date, entries, selectedEntry, onSelectEntry, studentNameMap }) => {
+interface DayDetailsProps {
+    date: string;
+    entries: Entry[];
+    selectedEntry: Entry | null;
+    onSelectEntry: (entry: Entry) => void;
+    studentNameMap: Map<number, string>;
+}
+
+const DayDetails = ({ date, entries, selectedEntry, onSelectEntry, studentNameMap }: DayDetailsProps) => {
     const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('de-DE', { year: 'numeric', month: 'long', day: 'numeric' });
     
-    const getErfolgRatingText = (rating) => {
+    const getErfolgRatingText = (rating: Entry['erfolgRating']) => {
         if (rating === 'positiv') return ' (Positiv)';
         if (rating === 'negativ') return ' (Negativ)';
         return '';
-    };
-
-    const getStudentName = (studentId) => {
-        if (studentNameMap instanceof Map) return studentNameMap.get(studentId) ?? 'Unbekannt';
-        return studentNameMap[studentId] ?? 'Unbekannt';
-    };
+    }
 
     return (
         <div>
@@ -37,12 +32,12 @@ const DayDetails = ({ date, entries, selectedEntry, onSelectEntry, studentNameMa
             ) : (
                 entries.map(entry => (
                     <div
-                        key={entry.id ?? Math.random()} // fallback, falls id fehlt
+                        key={entry.id}
                         className={`entry-card ${selectedEntry?.id === entry.id ? 'selected' : ''}`}
                         onClick={() => onSelectEntry(entry)}
                     >
                         <div className="entry-card-header">
-                            <span className="subject">{getStudentName(entry.studentId)} - {entry.subject}</span>
+                            <span className="subject">{studentNameMap.get(entry.studentId)} - {entry.subject}</span>
                         </div>
                         <div className="entry-content">
                             {entry.observations && <p><strong>Beobachtung:</strong> {entry.observations}</p>}
