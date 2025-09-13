@@ -34,7 +34,10 @@ const StudentDetails = ({ student, entries, selectedEntry, onSelectEntry, dateFi
                 </div>
                 {student.notes && (
                     <div className="entry-card" style={{ marginBottom: '1rem', cursor: 'default' }}>
-                        <p><strong>Anmerkungen:</strong> {student.notes.split('\n').map((line, i) => <React.Fragment key={i}>{line}<br/></React.Fragment>)}</p>
+                        <p>
+                            <strong>Anmerkungen:</strong>{' '}
+                            {student.notes.split('\n').map((line, i) => <React.Fragment key={i}>{line}<br/></React.Fragment>)}
+                        </p>
                     </div>
                 )}
                 <div className="date-filter">
@@ -67,9 +70,9 @@ const StudentDetails = ({ student, entries, selectedEntry, onSelectEntry, dateFi
                 </div>
             ) : (
                 entries.map(entry => (
-                    <div 
-                        key={entry.id} 
-                        className={`entry-card ${selectedEntry?.id === entry.id ? 'selected' : ''}`} 
+                    <div
+                        key={entry.id}
+                        className={`entry-card ${selectedEntry?.id === entry.id ? 'selected' : ''}`}
                         onClick={() => onSelectEntry(entry)}
                     >
                         <div className="entry-card-header">
