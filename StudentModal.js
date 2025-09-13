@@ -87,6 +87,7 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
             <div className="modal-content">
                 <h2>{studentToEdit ? 'Kind bearbeiten' : 'Neues Kind anlegen'}</h2>
                 <div>
+                    {/* Form fields */}
                     <div className="form-group">
                         <label htmlFor="name">Name des Kindes *</label>
                         <input id="name" name="name" type="text" value={formData.name} onChange={handleChange} autoFocus />
@@ -163,9 +164,8 @@ const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, 
                             <button 
                                 type="button" 
                                 className="btn btn-danger" 
-                                onClick={() => studentToEdit && onDeleteStudent(studentToEdit)}
+                                onClick={() => onDeleteStudent(studentToEdit)}
                                 style={{ marginRight: 'auto' }}
-                                disabled={!studentToEdit}
                             >
                                 🗑️ Löschen
                             </button>
