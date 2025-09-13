@@ -54,40 +54,64 @@ const Navigation = ({
         <aside className={`navigation ${isNavVisible ? 'visible' : ''}`}>
             <h2>Navigation</h2>
             <div className="search-bar-nav">
-                <input type="search" placeholder="🔍 Kind suchen..." value={searchQuery} onChange={onSearchChange} />
+                <input
+                    type="search"
+                    placeholder="🔍 Kind suchen..."
+                    value={searchQuery}
+                    onChange={onSearchChange}
+                />
             </div>
+
             <div className="filter-group">
                 <label htmlFor="schoolYear">Schuljahr</label>
                 <select id="schoolYear" name="schoolYear" value={filters.schoolYear} onChange={handleFilterChange}>
                     <option value="all">Alle Schuljahre</option>
-                    {filterOptions.schoolYears.map(year => <option key={year} value={year}>{year}</option>)}
+                    {filterOptions.schoolYears.map(year => (
+                        <option key={year} value={year}>{year}</option>
+                    ))}
                 </select>
             </div>
+
             <div className="filter-group">
                 <label htmlFor="school">Schule</label>
                 <select id="school" name="school" value={filters.school} onChange={handleFilterChange}>
                     <option value="all">Alle Schulen</option>
-                    {filterOptions.schools.map(school => <option key={school} value={school}>{school}</option>)}
+                    {filterOptions.schools.map(school => (
+                        <option key={school} value={school}>{school}</option>
+                    ))}
                 </select>
             </div>
+
             <div className="filter-group">
                 <label htmlFor="className">Klasse</label>
                 <select id="className" name="className" value={filters.className} onChange={handleFilterChange}>
                     <option value="all">Alle Klassen</option>
-                    {filterOptions.classNames.map(name => <option key={name} value={name}>{name}</option>)}
+                    {filterOptions.classNames.map(name => (
+                        <option key={name} value={name}>{name}</option>
+                    ))}
                 </select>
             </div>
+
             <div className="filter-group">
                 <label htmlFor="studentId">Kind</label>
                 <select id="studentId" name="studentId" value={filters.studentId} onChange={handleFilterChange}>
                     <option value="all">Alle Kinder</option>
-                    {studentOptions.map(student => <option key={student.id} value={student.id}>{student.name}</option>)}
+                    {studentOptions.map(student => (
+                        <option key={student.id} value={student.id}>{student.name}</option>
+                    ))}
                 </select>
             </div>
+
             <div className="filter-group">
                 <label htmlFor="globalDateFilter">Tag</label>
                 <div className="date-filter-wrapper">
-                    <input id="globalDateFilter" name="globalDateFilter" type="date" value={globalDateFilter} onChange={e => onGlobalDateChange(e.target.value)} />
+                    <input
+                        id="globalDateFilter"
+                        name="globalDateFilter"
+                        type="date"
+                        value={globalDateFilter}
+                        onChange={e => onGlobalDateChange(e.target.value)}
+                    />
                     <button
                         onClick={() => onGlobalDateChange('')}
                         className="btn-clear"
@@ -98,13 +122,19 @@ const Navigation = ({
                     </button>
                 </div>
             </div>
+
             <ul className="student-list">
                 {students.map(student => (
-                    <li key={student.id} className={`student-list-item ${selectedStudent?.id === student.id ? 'selected' : ''}`} onClick={() => handleStudentClick(student)}>
+                    <li
+                        key={student.id}
+                        className={`student-list-item ${selectedStudent?.id === student.id ? 'selected' : ''}`}
+                        onClick={() => handleStudentClick(student)}
+                    >
                         {student.name}
                     </li>
                 ))}
             </ul>
+
             <div className="navigation-footer">
                 <hr className="navigation-divider" />
                 <div className="navigation-actions">
