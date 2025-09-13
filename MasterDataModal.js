@@ -1,40 +1,45 @@
 /** @jsxImportSource react */
 import React, { useState } from 'react';
+import type { MasterData } from './types';
 
-const MasterDataModal = ({ masterData, onSave, onClose }) => {
+interface MasterDataModalProps {
+    masterData: MasterData;
+    onSave: (newMasterData: MasterData) => void;
+    onClose: () => void;
+}
+
+const MasterDataModal = ({ masterData, onSave, onClose }: MasterDataModalProps) => {
     const [localMasterData, setLocalMasterData] = useState(masterData);
     const [newSchoolYear, setNewSchoolYear] = useState('');
     const [newSchool, setNewSchool] = useState('');
     const [selectedSchool, setSelectedSchool] = useState('');
     const [newClass, setNewClass] = useState('');
 
-    // Schuljahr-Handler
+    // Schuljahre
     const handleAddSchoolYear = () => {
         if (newSchoolYear && !localMasterData.schoolYears.includes(newSchoolYear)) {
             setLocalMasterData(prev => ({ ...prev, schoolYears: [...prev.schoolYears, newSchoolYear].sort() }));
             setNewSchoolYear('');
         }
     };
-    const handleDeleteSchoolYear = (yearToDelete) => {
-        setLocalMasterData(prev => ({ ...prev, schoolYears: prev.schoolYears.filter(y => y !== yearToDelete) }));
+    const handleDeleteSchoolYear = (year: string) => {
+        setLocalMasterData(prev => ({ ...prev, schoolYears: prev.schoolYears.filter(y => y !== year) }));
     };
 
-    // Schule-Handler
+    // Schulen
     const handleAddSchool = () => {
         if (newSchool && !localMasterData.schools[newSchool]) {
             setLocalMasterData(prev => ({ ...prev, schools: { ...prev.schools, [newSchool]: [] } }));
             setNewSchool('');
         }
     };
-    const handleDeleteSchool = (schoolToDelete) => {
-        const { [schoolToDelete]: _, ...remainingSchools } = localMasterData.schools;
-        setLocalMasterData(prev => ({ ...prev, schools: remainingSchools }));
-        if (selectedSchool === schoolToDelete) {
-            setSelectedSchool('');
-        }
+    const handleDeleteSchool = (school: string) => {
+        const { [school]: _, ...remaining } = localMasterData.schools;
+        setLocalMasterData(prev => ({ ...prev, schools: remaining }));
+        if (selectedSchool === school) setSelectedSchool('');
     };
 
-    // Klasse-Handler
+    // Klassen
     const handleAddClass = () => {
         if (newClass && selectedSchool && !localMasterData.schools[selectedSchool].includes(newClass)) {
             setLocalMasterData(prev => ({
@@ -47,13 +52,13 @@ const MasterDataModal = ({ masterData, onSave, onClose }) => {
             setNewClass('');
         }
     };
-    const handleDeleteClass = (classToDelete) => {
+    const handleDeleteClass = (cls: string) => {
         if (selectedSchool) {
             setLocalMasterData(prev => ({
                 ...prev,
                 schools: {
                     ...prev.schools,
-                    [selectedSchool]: prev.schools[selectedSchool].filter(c => c !== classToDelete)
+                    [selectedSchool]: prev.schools[selectedSchool].filter(c => c !== cls)
                 }
             }));
         }
@@ -89,8 +94,9 @@ const MasterDataModal = ({ masterData, onSave, onClose }) => {
                                 <input type="text" value={newSchool} onChange={e => setNewSchool(e.target.value)} placeholder="Neue Schule hinzufügen" />
                                 <button type="button" onClick={handleAddSchool} className="btn btn-primary" style={{ marginTop: '0.5rem', width: '100%' }}>Hinzufügen</button>
                             </div>
+
                             <div className="form-group">
-                                <label>Schule zur Bearbeitung auswählen</label>
+                                <label>Schule auswählen</label>
                                 <select value={selectedSchool} onChange={e => setSelectedSchool(e.target.value)}>
                                     <option value="">Bitte wählen...</option>
                                     {Object.keys(localMasterData.schools).sort().map(school => (
