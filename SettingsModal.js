@@ -1,24 +1,32 @@
 /** @jsxImportSource react */
 import React, { useState } from 'react';
+import type { Settings, MasterData } from './types';
 import MasterDataModal from './MasterDataModal';
 
-const SettingsModal = ({ onClose, onSave, currentSettings, version }) => {
+interface SettingsModalProps {
+    onClose: () => void;
+    onSave: (settings: Settings) => void;
+    currentSettings: Settings;
+    version: string;
+}
+
+const SettingsModal = ({ onClose, onSave, currentSettings, version }: SettingsModalProps) => {
     const [settings, setSettings] = useState(currentSettings);
     const [isMasterDataModalOpen, setIsMasterDataModalOpen] = useState(false);
 
-    const handleThemeChange = (e) => {
-        setSettings(s => ({ ...s, theme: e.target.value }));
+    const handleThemeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSettings(s => ({ ...s, theme: e.target.value as Settings['theme'] }));
     };
 
-    const handleFontSizeChange = (e) => {
+    const handleFontSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSettings(s => ({ ...s, fontSize: parseInt(e.target.value, 10) }));
     };
 
-    const handleInputFontSizeChange = (e) => {
+    const handleInputFontSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSettings(s => ({ ...s, inputFontSize: parseInt(e.target.value, 10) }));
     };
 
-    const handleCustomColorChange = (e) => {
+    const handleCustomColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setSettings(s => ({
             ...s,
@@ -32,8 +40,8 @@ const SettingsModal = ({ onClose, onSave, currentSettings, version }) => {
     const handleSave = () => {
         onSave(settings);
     };
-    
-    const handleMasterDataUpdate = (newMasterData) => {
+
+    const handleMasterDataUpdate = (newMasterData: MasterData) => {
         setSettings(s => ({ ...s, masterData: newMasterData }));
         setIsMasterDataModalOpen(false);
     };
@@ -42,6 +50,7 @@ const SettingsModal = ({ onClose, onSave, currentSettings, version }) => {
         <div className="modal-backdrop">
             <div className="modal-content">
                 <h2>Einstellungen</h2>
+
                 <div className="settings-group">
                     <h3>Farbschema</h3>
                     <div className="theme-options">
@@ -64,25 +73,16 @@ const SettingsModal = ({ onClose, onSave, currentSettings, version }) => {
                     </div>
                     {settings.theme === 'custom' && (
                         <div className="custom-colors">
-                            <div className="custom-color-option">
-                                <label htmlFor="sidebar">Navigation</label>
-                                <input type="color" id="sidebar" name="sidebar" value={settings.customColors.sidebar} onChange={handleCustomColorChange} />
-                            </div>
-                            <div className="custom-color-option">
-                                <label htmlFor="header">Header</label>
-                                <input type="color" id="header" name="header" value={settings.customColors.header} onChange={handleCustomColorChange} />
-                            </div>
-                            <div className="custom-color-option">
-                                <label htmlFor="toolbar">Werkzeugleiste</label>
-                                <input type="color" id="toolbar" name="toolbar" value={settings.customColors.toolbar} onChange={handleCustomColorChange} />
-                            </div>
-                            <div className="custom-color-option">
-                                <label htmlFor="entryBackground">Protokoll-Hintergrund</label>
-                                <input type="color" id="entryBackground" name="entryBackground" value={settings.customColors.entryBackground} onChange={handleCustomColorChange} />
-                            </div>
+                            {['sidebar', 'header', 'toolbar', 'entryBackground'].map(area => (
+                                <div key={area} className="custom-color-option">
+                                    <label htmlFor={area}>{area.charAt(0).toUpperCase() + area.slice(1)}</label>
+                                    <input type="color" id={area} name={area} value={settings.customColors[area]} onChange={handleCustomColorChange} />
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>
+
                 <div className="settings-group">
                     <h3>Schriftgröße Labels</h3>
                     <div className="font-size-slider">
@@ -92,6 +92,7 @@ const SettingsModal = ({ onClose, onSave, currentSettings, version }) => {
                         <span>{settings.fontSize}px</span>
                     </div>
                 </div>
+
                 <div className="settings-group">
                     <h3>Schriftgröße Eingabefelder</h3>
                     <div className="font-size-slider">
@@ -101,20 +102,24 @@ const SettingsModal = ({ onClose, onSave, currentSettings, version }) => {
                         <span>{settings.inputFontSize ?? 16}px</span>
                     </div>
                 </div>
+
                 <div className="settings-group">
                     <h3>Stammdaten</h3>
                     <button type="button" className="btn btn-secondary" onClick={() => setIsMasterDataModalOpen(true)}>
                         Stammdaten verwalten...
                     </button>
                 </div>
+
                 <div className="modal-actions">
                     <button type="button" className="btn btn-secondary" onClick={onClose}>❌ Abbrechen</button>
                     <button type="button" className="btn btn-primary" onClick={handleSave}>✔️ Übernehmen</button>
                 </div>
+
                 <div className="settings-footer">
                     Version {version}
                 </div>
             </div>
+
             {isMasterDataModalOpen && (
                 <MasterDataModal
                     masterData={settings.masterData}
