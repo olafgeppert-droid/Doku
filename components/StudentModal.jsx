@@ -3,34 +3,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { capitalizeWords } from './utils.js';
 import { FAVORITE_NATIONALITIES, ALL_NATIONALITIES } from './nationalities.js';
 
-/**
- * @typedef {Object} Student
- * @property {number} [id]
- * @property {string} name
- * @property {string} schoolYear
- * @property {string} school
- * @property {string} className
- * @property {string} [gender]
- * @property {string} [nationality]
- * @property {string} [germanLevel]
- * @property {string} [notes]
- */
-
-/**
- * @typedef {Object} MasterData
- * @property {string[]} schoolYears
- * @property {Object.<string,string[]>} schools
- */
-
-/**
- * StudentModal component
- * @param {Object} props
- * @param {() => void} props.onClose
- * @param {(student: Student) => void} props.onSaveStudent
- * @param {(student: Student) => void} props.onDeleteStudent
- * @param {Student|null} [props.studentToEdit]
- * @param {MasterData} props.masterData
- */
 const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, masterData }) => {
     const [formData, setFormData] = useState({ 
         name: '', 
