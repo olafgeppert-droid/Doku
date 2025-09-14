@@ -1,5 +1,5 @@
 /** @jsxImportSource react */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import HelpModal from './components/HelpModal.jsx';
 import StatisticsModal from './components/StatisticsModal.jsx';
 import SettingsModal from './components/SettingsModal.jsx';
