@@ -3,75 +3,101 @@ import React, { useState } from 'react';
 import Toolbar from './components/Toolbar.jsx';
 import StudentModal from './components/StudentModal.jsx';
 import StudentDetails from './components/StudentDetails.jsx';
-import HelpModal from './components/HelpModal.jsx';
 import SettingsModal from './components/SettingsModal.jsx';
+import HelpModal from './components/HelpModal.jsx';
 import StatisticsModal from './components/StatisticsModal.jsx';
+import { INITIAL_MASTER_DATA } from './utils.js';
 
 const App = () => {
-    const [students, setStudents] = useState([]);
-    const [entries, setEntries] = useState([]);
-    const [selectedStudent, setSelectedStudent] = useState(null);
-    const [selectedEntry, setSelectedEntry] = useState(null);
-    const [studentModalOpen, setStudentModalOpen] = useState(false);
-    const [helpModalOpen, setHelpModalOpen] = useState(false);
-    const [settingsModalOpen, setSettingsModalOpen] = useState(false);
-    const [statisticsModalOpen, setStatisticsModalOpen] = useState(false);
+  const [students, setStudents] = useState([]);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedEntry, setSelectedEntry] = useState(null);
+  const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
+  const [studentToEdit, setStudentToEdit] = useState(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isStatsOpen, setIsStatsOpen] = useState(false);
+  const [masterData, setMasterData] = useState(INITIAL_MASTER_DATA);
+  const [dateFilter, setDateFilter] = useState('');
 
-    return (
-        <div>
-            <Toolbar
-                onNewStudent={() => setStudentModalOpen(true)}
-                onManageStudent={() => selectedStudent && setStudentModalOpen(true)}
-                onNewEntry={() => {}}
-                onManageEntry={() => {}}
-                canManageStudent={!!selectedStudent}
-                canAddEntry={!!selectedStudent}
-                canManageEntry={!!selectedEntry}
-                onPrint={() => {}}
-                onExport={() => {}}
-                onImport={() => {}}
-                onUndo={() => {}}
-                onRedo={() => {}}
-                canUndo={false}
-                canRedo={false}
-            />
+  const handleAddStudent = () => {
+    setStudentToEdit(null);
+    setIsStudentModalOpen(true);
+  };
 
-            <StudentDetails
-                student={selectedStudent}
-                entries={entries.filter(e => e.studentId === selectedStudent?.id)}
-                selectedEntry={selectedEntry}
-                onSelectEntry={setSelectedEntry}
-                dateFilter=""
-                onDateFilterChange={() => {}}
-            />
+  const handleEditStudent = () => {
+    if (!selectedStudent) return;
+    setStudentToEdit(selectedStudent);
+    setIsStudentModalOpen(true);
+  };
 
-            {studentModalOpen && (
-                <StudentModal
-                    onClose={() => setStudentModalOpen(false)}
-                    onSaveStudent={(student) => setStudents(prev => [...prev, student])}
-                    onDeleteStudent={(student) => setStudents(prev => prev.filter(s => s.id !== student.id))}
-                    masterData={{ schoolYears: [], schools: {} }}
-                />
-            )}
+  const handleSaveStudent = (student) => {
+    if (student.id != null) {
+      setStudents(prev => prev.map(s => s.id === student.id ? student : s));
+    } else {
+      student.id = Date.now();
+      setStudents(prev => [...prev, student]);
+    }
+    setIsStudentModalOpen(false);
+  };
 
-            {helpModalOpen && <HelpModal onClose={() => setHelpModalOpen(false)} version="1.0" />}
-            {settingsModalOpen && (
-                <SettingsModal
-                    onClose={() => setSettingsModalOpen(false)}
-                    onSave={() => {}}
-                    currentSettings={{ theme: 'default', fontSize: 16, inputFontSize: 16, customColors: { sidebar: '#fff', header: '#fff', toolbar: '#fff', entryBackground: '#fff' }, masterData: { schoolYears: [], schools: {} } }}
-                    version="1.0"
-                />
-            )}
-            {statisticsModalOpen && (
-                <StatisticsModal
-                    onClose={() => setStatisticsModalOpen(false)}
-                    students={students}
-                    allEntries={entries}
-                />
-            )}
-        </div>
-    );
+  const handleDeleteStudent = (student) => {
+    setStudents(prev => prev.filter(s => s.id !== student.id));
+    setIsStudentModalOpen(false);
+    setSelectedStudent(null);
+  };
+
+  return (
+    <div>
+      <Toolbar
+        onNewStudent={handleAddStudent}
+        onManageStudent={handleEditStudent}
+        onNewEntry={() => {}}
+        onManageEntry={() => {}}
+        canManageStudent={!!selectedStudent}
+        canAddEntry={!!selectedStudent}
+        canManageEntry={!!selectedEntry}
+        onPrint={() => {}}
+        onExport={() => {}}
+        onImport={() => {}}
+        onUndo={() => {}}
+        onRedo={() => {}}
+        canUndo={false}
+        canRedo={false}
+      />
+
+      <StudentDetails
+        student={selectedStudent}
+        entries={selectedStudent?.entries || []}
+        selectedEntry={selectedEntry}
+        onSelectEntry={setSelectedEntry}
+        dateFilter={dateFilter}
+        onDateFilterChange={setDateFilter}
+      />
+
+      {isStudentModalOpen && (
+        <StudentModal
+          studentToEdit={studentToEdit}
+          onSaveStudent={handleSaveStudent}
+          onDeleteStudent={handleDeleteStudent}
+          masterData={masterData}
+          onClose={() => setIsStudentModalOpen(false)}
+        />
+      )}
+
+      {isSettingsOpen && (
+        <SettingsModal
+          currentSettings={{ theme: 'default', fontSize: 16, inputFontSize: 16, customColors: { sidebar:'#fff', header:'#fff', toolbar:'#fff', entryBackground:'#fff' }, masterData }}
+          onSave={setMasterData}
+          onClose={() => setIsSettingsOpen(false)}
+          version="1.0.0"
+        />
+      )}
+
+      {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} version="1.0.0" />}
+      {isStatsOpen && <StatisticsModal onClose={() => setIsStatsOpen(false)} students={students} allEntries={students.flatMap(s => s.entries || [])} />}
+    </div>
+  );
 };
 
 export default App;
