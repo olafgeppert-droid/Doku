@@ -3,7 +3,7 @@ name: Deploy Vite React App to GitHub Pages
 on:
   push:
     branches:
-      - main   # falls dein Standard-Branch "master" heißt, bitte hier ändern
+      - main   # falls dein Standard-Branch "master" heißt, ändere es hier
 
 permissions:
   contents: read
