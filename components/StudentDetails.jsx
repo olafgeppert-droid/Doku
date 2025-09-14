@@ -1,5 +1,15 @@
 import React from 'react';
 
+/**
+ * StudentDetails component
+ * @param {Object} props
+ * @param {Object} props.student
+ * @param {Array} props.entries
+ * @param {Object|null} props.selectedEntry
+ * @param {(entry: Object) => void} props.onSelectEntry
+ * @param {string} props.dateFilter
+ * @param {(date: string) => void} props.onDateFilterChange
+ */
 const StudentDetails = ({
   student,
   entries,
@@ -16,9 +26,7 @@ const StudentDetails = ({
 
   const today = new Date().toISOString().split('T')[0];
 
-  if (!student) {
-    return null;
-  }
+  if (!student) return null;
 
   return (
     <div>
@@ -26,6 +34,7 @@ const StudentDetails = ({
         <div className="student-details-title-group">
           <h2>Protokolle für {student.name}</h2>
         </div>
+
         <div className="student-info">
           {student.gender && (
             <span>
