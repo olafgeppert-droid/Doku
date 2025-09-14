@@ -1,103 +1,117 @@
 /** @jsxImportSource react */
-import React, { useState } from 'react';
-import Toolbar from './components/Toolbar.jsx';
-import StudentModal from './components/StudentModal.jsx';
-import StudentDetails from './components/StudentDetails.jsx';
-import SettingsModal from './components/SettingsModal.jsx';
+import React, { useState, useEffect } from 'react';
 import HelpModal from './components/HelpModal.jsx';
 import StatisticsModal from './components/StatisticsModal.jsx';
-import { INITIAL_MASTER_DATA } from './utils.js';
+import SettingsModal from './components/SettingsModal.jsx';
+import StudentModal from './components/StudentModal.jsx';
+import StudentDetails from './components/StudentDetails.jsx';
+import Toolbar from './components/Toolbar.jsx';
+import { INITIAL_MASTER_DATA, INITIAL_SETTINGS } from './utils.js';
 
 const App = () => {
-  const [students, setStudents] = useState([]);
-  const [selectedStudent, setSelectedStudent] = useState(null);
-  const [selectedEntry, setSelectedEntry] = useState(null);
-  const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
-  const [studentToEdit, setStudentToEdit] = useState(null);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const [isStatsOpen, setIsStatsOpen] = useState(false);
-  const [masterData, setMasterData] = useState(INITIAL_MASTER_DATA);
-  const [dateFilter, setDateFilter] = useState('');
+    const [students, setStudents] = useState([]);
+    const [entries, setEntries] = useState([]);
+    const [selectedStudent, setSelectedStudent] = useState(null);
+    const [selectedEntry, setSelectedEntry] = useState(null);
+    const [showHelp, setShowHelp] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+    const [showStatistics, setShowStatistics] = useState(false);
+    const [showStudentModal, setShowStudentModal] = useState(false);
+    const [studentToEdit, setStudentToEdit] = useState(null);
+    const [masterData, setMasterData] = useState(INITIAL_MASTER_DATA);
+    const [settings, setSettings] = useState(INITIAL_SETTINGS);
+    const [dateFilter, setDateFilter] = useState('');
 
-  const handleAddStudent = () => {
-    setStudentToEdit(null);
-    setIsStudentModalOpen(true);
-  };
+    const handleAddStudent = () => {
+        setStudentToEdit(null);
+        setShowStudentModal(true);
+    };
 
-  const handleEditStudent = () => {
-    if (!selectedStudent) return;
-    setStudentToEdit(selectedStudent);
-    setIsStudentModalOpen(true);
-  };
+    const handleManageStudent = () => {
+        if (selectedStudent) {
+            setStudentToEdit(selectedStudent);
+            setShowStudentModal(true);
+        }
+    };
 
-  const handleSaveStudent = (student) => {
-    if (student.id != null) {
-      setStudents(prev => prev.map(s => s.id === student.id ? student : s));
-    } else {
-      student.id = Date.now();
-      setStudents(prev => [...prev, student]);
-    }
-    setIsStudentModalOpen(false);
-  };
+    const handleSaveStudent = (student) => {
+        setStudents(prev => {
+            if (student.id != null) {
+                return prev.map(s => (s.id === student.id ? student : s));
+            } else {
+                return [...prev, { ...student, id: Date.now() }];
+            }
+        });
+        setShowStudentModal(false);
+    };
 
-  const handleDeleteStudent = (student) => {
-    setStudents(prev => prev.filter(s => s.id !== student.id));
-    setIsStudentModalOpen(false);
-    setSelectedStudent(null);
-  };
+    const handleDeleteStudent = (student) => {
+        setStudents(prev => prev.filter(s => s.id !== student.id));
+        setEntries(prev => prev.filter(e => e.studentId !== student.id));
+        setShowStudentModal(false);
+        setSelectedStudent(null);
+        setSelectedEntry(null);
+    };
 
-  return (
-    <div>
-      <Toolbar
-        onNewStudent={handleAddStudent}
-        onManageStudent={handleEditStudent}
-        onNewEntry={() => {}}
-        onManageEntry={() => {}}
-        canManageStudent={!!selectedStudent}
-        canAddEntry={!!selectedStudent}
-        canManageEntry={!!selectedEntry}
-        onPrint={() => {}}
-        onExport={() => {}}
-        onImport={() => {}}
-        onUndo={() => {}}
-        onRedo={() => {}}
-        canUndo={false}
-        canRedo={false}
-      />
+    const filteredEntries = entries.filter(e => !dateFilter || e.date === dateFilter);
 
-      <StudentDetails
-        student={selectedStudent}
-        entries={selectedStudent?.entries || []}
-        selectedEntry={selectedEntry}
-        onSelectEntry={setSelectedEntry}
-        dateFilter={dateFilter}
-        onDateFilterChange={setDateFilter}
-      />
+    return (
+        <div className={`app theme-${settings.theme}`} style={{ fontSize: `${settings.fontSize}px` }}>
+            <Toolbar
+                onNewStudent={handleAddStudent}
+                onManageStudent={handleManageStudent}
+                onNewEntry={() => {}}
+                onManageEntry={() => {}}
+                canManageStudent={!!selectedStudent}
+                canAddEntry={!!selectedStudent}
+                canManageEntry={!!selectedEntry}
+                onPrint={() => window.print()}
+                onExport={() => {}}
+                onImport={() => {}}
+                onUndo={() => {}}
+                onRedo={() => {}}
+                canUndo={false}
+                canRedo={false}
+            />
 
-      {isStudentModalOpen && (
-        <StudentModal
-          studentToEdit={studentToEdit}
-          onSaveStudent={handleSaveStudent}
-          onDeleteStudent={handleDeleteStudent}
-          masterData={masterData}
-          onClose={() => setIsStudentModalOpen(false)}
-        />
-      )}
+            {selectedStudent && (
+                <StudentDetails
+                    student={selectedStudent}
+                    entries={filteredEntries}
+                    selectedEntry={selectedEntry}
+                    onSelectEntry={setSelectedEntry}
+                    dateFilter={dateFilter}
+                    onDateFilterChange={setDateFilter}
+                />
+            )}
 
-      {isSettingsOpen && (
-        <SettingsModal
-          currentSettings={{ theme: 'default', fontSize: 16, inputFontSize: 16, customColors: { sidebar:'#fff', header:'#fff', toolbar:'#fff', entryBackground:'#fff' }, masterData }}
-          onSave={setMasterData}
-          onClose={() => setIsSettingsOpen(false)}
-          version="1.0.0"
-        />
-      )}
-
-      {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} version="1.0.0" />}
-      {isStatsOpen && <StatisticsModal onClose={() => setIsStatsOpen(false)} students={students} allEntries={students.flatMap(s => s.entries || [])} />}
-    </div>
-  );
+            {showHelp && <HelpModal onClose={() => setShowHelp(false)} version="1.0.0" />}
+            {showSettings && (
+                <SettingsModal
+                    onClose={() => setShowSettings(false)}
+                    onSave={setSettings}
+                    currentSettings={settings}
+                    version="1.0.0"
+                />
+            )}
+            {showStatistics && (
+                <StatisticsModal
+                    onClose={() => setShowStatistics(false)}
+                    students={students}
+                    allEntries={entries}
+                />
+            )}
+            {showStudentModal && (
+                <StudentModal
+                    onClose={() => setShowStudentModal(false)}
+                    onSaveStudent={handleSaveStudent}
+                    onDeleteStudent={handleDeleteStudent}
+                    studentToEdit={studentToEdit}
+                    masterData={masterData}
+                />
+            )}
+        </div>
+    );
 };
 
 export default App;
