@@ -1,14 +1,28 @@
 /** @jsxImportSource react */
 import React, { useMemo } from 'react';
-import type { Student, Entry } from './types';
 
-interface StatisticsModalProps {
-    onClose: () => void;
-    students: Student[];
-    allEntries: Entry[];
-}
+/**
+ * @typedef {Object} Student
+ * @property {number} id
+ * @property {string} name
+ * @property {string} school
+ */
 
-const StatisticsModal = ({ onClose, students, allEntries }: StatisticsModalProps) => {
+/**
+ * @typedef {Object} Entry
+ * @property {number} studentId
+ * @property {string} date
+ * @property {string} subject
+ * @property {string} observations
+ * @property {string} measures
+ * @property {string} erfolg
+ * @property {'positiv'|'negativ'|''} erfolgRating
+ */
+
+/**
+ * @param {{ onClose: () => void, students: Student[], allEntries: Entry[] }} props
+ */
+const StatisticsModal = ({ onClose, students, allEntries }) => {
     const stats = useMemo(() => {
         if (students.length === 0 && allEntries.length === 0) return null;
 
@@ -19,14 +33,14 @@ const StatisticsModal = ({ onClose, students, allEntries }: StatisticsModalProps
             const rating = entry.erfolgRating || 'Keine';
             acc[rating] = (acc[rating] || 0) + 1;
             return acc;
-        }, {} as Record<string, number>);
+        }, {});
 
         const entriesPerStudent = allEntries.reduce((acc, entry) => {
             acc[entry.studentId] = (acc[entry.studentId] || 0) + 1;
             return acc;
-        }, {} as Record<number, number>);
+        }, {});
 
-        const studentNameMap = new Map(students.map(s => [s.id!, s.name]));
+        const studentNameMap = new Map(students.map(s => [s.id, s.name]));
 
         let mostActiveStudent = 'N/A';
         let maxEntries = 0;
@@ -43,7 +57,7 @@ const StatisticsModal = ({ onClose, students, allEntries }: StatisticsModalProps
                 acc[student.school] = (acc[student.school] || 0) + 1;
             }
             return acc;
-        }, {} as Record<string, number>);
+        }, {});
 
         return {
             totalStudents,
@@ -79,9 +93,18 @@ const StatisticsModal = ({ onClose, students, allEntries }: StatisticsModalProps
                             <h3>Auswertung der Einträge</h3>
                             <h4>Bewertung des Erfolgs</h4>
                             <ul>
-                                <li><strong>Positiv:</strong> {stats.ratingCounts.positiv} ({stats.totalEntries > 0 ? ((stats.ratingCounts.positiv / stats.totalEntries) * 100).toFixed(1) : 0}%)</li>
-                                <li><strong>Negativ:</strong> {stats.ratingCounts.negativ} ({stats.totalEntries > 0 ? ((stats.ratingCounts.negativ / stats.totalEntries) * 100).toFixed(1) : 0}%)</li>
-                                <li><strong>Keine Bewertung:</strong> {stats.ratingCounts.Keine} ({stats.totalEntries > 0 ? ((stats.ratingCounts.Keine / stats.totalEntries) * 100).toFixed(1) : 0}%)</li>
+                                <li>
+                                    <strong>Positiv:</strong> {stats.ratingCounts.positiv} (
+                                    {stats.totalEntries > 0 ? ((stats.ratingCounts.positiv / stats.totalEntries) * 100).toFixed(1) : 0}%)
+                                </li>
+                                <li>
+                                    <strong>Negativ:</strong> {stats.ratingCounts.negativ} (
+                                    {stats.totalEntries > 0 ? ((stats.ratingCounts.negativ / stats.totalEntries) * 100).toFixed(1) : 0}%)
+                                </li>
+                                <li>
+                                    <strong>Keine Bewertung:</strong> {stats.ratingCounts.Keine} (
+                                    {stats.totalEntries > 0 ? ((stats.ratingCounts.Keine / stats.totalEntries) * 100).toFixed(1) : 0}%)
+                                </li>
                             </ul>
 
                             <h4>Einträge pro Schule</h4>
