@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client';
 // --- Components ---
 import Header from './Header.jsx';
 import Navigation from './Navigation.jsx';
-import Toolbar from './components/Toolbar.tsx';
+import Toolbar from './components/Toolbar.jsx';
 import StudentDetails from './components/StudentDetails.jsx';
 import DayDetails from './components/DayDetails.jsx';
 import StudentModal from './components/StudentModal.jsx';
@@ -105,15 +105,11 @@ const App = () => {
     const filteredStudents = useMemo(() => {
         let result = [...students];
 
-        // Filter by schoolYear, school, className
         if (filters.schoolYear !== 'all') result = result.filter(s => s.schoolYear === filters.schoolYear);
         if (filters.school !== 'all') result = result.filter(s => s.school === filters.school);
         if (filters.className !== 'all') result = result.filter(s => s.className === filters.className);
-
-        // Filter by studentId
         if (filters.studentId !== 'all') result = result.filter(s => s.id === filters.studentId);
 
-        // Filter by search
         if (searchQuery.trim() !== '') {
             const q = searchQuery.toLowerCase();
             result = result.filter(s => s.name.toLowerCase().includes(q));
