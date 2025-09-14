@@ -1,23 +1,6 @@
 /** @jsxImportSource react */
 import React from 'react';
 
-interface ToolbarProps {
-    onNewStudent: () => void;
-    onManageStudent: () => void;
-    onNewEntry: () => void;
-    onManageEntry: () => void;
-    canManageStudent: boolean;
-    canAddEntry: boolean;
-    canManageEntry: boolean;
-    onPrint: () => void;
-    onExport: () => void;
-    onImport: () => void;
-    onUndo: () => void;
-    onRedo: () => void;
-    canUndo: boolean;
-    canRedo: boolean;
-}
-
 const Toolbar = ({
     onNewStudent,
     onManageStudent,
@@ -33,7 +16,7 @@ const Toolbar = ({
     onRedo,
     canUndo,
     canRedo,
-}: ToolbarProps) => (
+}) => (
     <div className="toolbar">
         <div className="toolbar-row">
             <button className="btn btn-primary" onClick={onNewStudent}>➕ Kind anlegen</button>
