@@ -1,34 +1,7 @@
 /** @jsxImportSource react */
 import React, { useState } from 'react';
-import MasterDataModal from './MasterDataModal.js';
+import MasterDataModal from './MasterDataModal.jsx';
 
-/**
- * @typedef {Object} MasterData
- * @property {string[]} schoolYears
- * @property {Object.<string, string[]>} schools
- */
-
-/**
- * @typedef {Object} Settings
- * @property {'default' | 'dark' | 'high-contrast' | 'custom'} theme
- * @property {number} fontSize
- * @property {number} inputFontSize
- * @property {Object} customColors
- * @property {string} customColors.sidebar
- * @property {string} customColors.header
- * @property {string} customColors.toolbar
- * @property {string} customColors.entryBackground
- * @property {MasterData} masterData
- */
-
-/**
- * SettingsModal component
- * @param {Object} props
- * @param {() => void} props.onClose
- * @param {(settings: Settings) => void} props.onSave
- * @param {Settings} props.currentSettings
- * @param {string} props.version
- */
 const SettingsModal = ({ onClose, onSave, currentSettings, version }) => {
     const [settings, setSettings] = useState(currentSettings);
     const [isMasterDataModalOpen, setIsMasterDataModalOpen] = useState(false);
@@ -70,7 +43,6 @@ const SettingsModal = ({ onClose, onSave, currentSettings, version }) => {
             <div className="modal-content">
                 <h2>Einstellungen</h2>
 
-                {/* Farbschema */}
                 <div className="settings-group">
                     <h3>Farbschema</h3>
                     <div className="theme-options">
@@ -100,7 +72,6 @@ const SettingsModal = ({ onClose, onSave, currentSettings, version }) => {
                     )}
                 </div>
 
-                {/* Schriftgröße Labels */}
                 <div className="settings-group">
                     <h3>Schriftgröße Labels</h3>
                     <div className="font-size-slider">
@@ -111,7 +82,6 @@ const SettingsModal = ({ onClose, onSave, currentSettings, version }) => {
                     </div>
                 </div>
 
-                {/* Schriftgröße Eingabefelder */}
                 <div className="settings-group">
                     <h3>Schriftgröße Eingabefelder</h3>
                     <div className="font-size-slider">
@@ -122,7 +92,6 @@ const SettingsModal = ({ onClose, onSave, currentSettings, version }) => {
                     </div>
                 </div>
 
-                {/* Stammdaten */}
                 <div className="settings-group">
                     <h3>Stammdaten</h3>
                     <button type="button" className="btn btn-secondary" onClick={() => setIsMasterDataModalOpen(true)}>
@@ -130,7 +99,6 @@ const SettingsModal = ({ onClose, onSave, currentSettings, version }) => {
                     </button>
                 </div>
 
-                {/* Buttons */}
                 <div className="modal-actions">
                     <button type="button" className="btn btn-secondary" onClick={onClose}>❌ Abbrechen</button>
                     <button type="button" className="btn btn-primary" onClick={handleSave}>✔️ Übernehmen</button>
