@@ -1,7 +1,7 @@
 /** @jsxImportSource react */
 import React, { useState, useEffect, useMemo } from 'react';
-import { capitalizeWords } from './utils.js';
-import { FAVORITE_NATIONALITIES, ALL_NATIONALITIES } from './nationalities.js';
+import { capitalizeWords } from '../utils.js';
+import { FAVORITE_NATIONALITIES, ALL_NATIONALITIES } from '../nationalities.js';
 
 const StudentModal = ({ onClose, onSaveStudent, onDeleteStudent, studentToEdit, masterData }) => {
     const [formData, setFormData] = useState({ 
